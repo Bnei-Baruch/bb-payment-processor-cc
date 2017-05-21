@@ -24,7 +24,7 @@
     {foreach key=property item=terminal from=$form name=terminals}
       {if $smarty.foreach.terminals.first}
         <tr>
-          <th colspan="2">Merchant terminal numbers for specific payment prcessors</th>
+          <th colspan="2">Merchant terminal numbers for specific payment processors</th>
         </tr>
       {/if}
 
