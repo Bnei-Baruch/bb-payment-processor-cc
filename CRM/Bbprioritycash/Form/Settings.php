@@ -54,8 +54,8 @@ class CRM_Bbprioritycash_Form_Settings extends CRM_Core_Form {
   }
 
   public function getPaymentProcessors() {
-    // Get the bbprioritycash payment processor type
-    $bbprioritycashName = array( 'name' => 'bbprioritycash' );
+    // Get the Bbprioritycash payment processor type
+    $bbprioritycashName = array( 'name' => 'Bbprioritycash' );
     $paymentProcessorType = civicrm_api3( 'PaymentProcessorType', 'getsingle', $bbprioritycashName );
 
     // Get the payment processors of bbprioritycash type

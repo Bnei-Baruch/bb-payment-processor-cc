@@ -27,7 +27,7 @@ function bbprioritycash_civicrm_xmlMenu(&$files) {
  */
 function bbprioritycash_civicrm_install() {
   $params = array(
-    'version' => 1,
+    'version' => 3,
     'name' => 'BB-Priority CASH Payment Processor',
     'title' => 'BB-Priority CASH Payment Processor',
     'description' => 'Register Cash Payment in Priority',
@@ -60,14 +60,14 @@ function bbprioritycash_civicrm_postInstall() {
  */
 function bbprioritycash_civicrm_uninstall() {
   $params = array(
-    'version' => 1,
+    'version' => 3,
     'sequential' => 1,
     'name' => 'BB-Priority CASH Payment Processor',
   );
   $result = civicrm_api('PaymentProcessorType', 'get', $params);
   if ($result["count"] == 1) {
     $params = array(
-      'version' => 1,
+      'version' => 3,
       'sequential' => 1,
       'id' => $result["id"],
     );
