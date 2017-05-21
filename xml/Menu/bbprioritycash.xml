@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/bbprioritycash/settings</path>
+    <page_callback>CRM_Bbpprioritycash_Form_Settings</page_callback>
+    <title>BBPriorityCash Settings</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
+</menu>

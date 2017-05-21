@@ -31,14 +31,23 @@ function bbprioritycash_civicrm_install() {
     'name' => 'BB-Priority CASH Payment Processor',
     'title' => 'BB-Priority CASH Payment Processor',
     'description' => 'Register Cash Payment in Priority',
+    'is_active' => 1,
+    'user_name_label' => 'User Name',
+    'password_label' => 'Password',
+    'signature_label' => 'Signature',
+    'subject_label' => 'Subject',
     'class_name' => 'Payment_BBPriorityCash',
-    'billing_mode' => 'notify',
-    'user_name_label' => 'Número de comercio',
-    'password_label' => 'Clave secreta de encriptación',
-    'url_site_default'=> 'https://sis.redsys.es/sis/realizarPago',
-    'url_site_test_default' => 'https://sis-t.redsys.es:25443/sis/realizarPago',
+    'url_site_default' => 'URL of the processor service provider website',
+    'url_api_default' => 'URL where the data will be posted',
+    'url_recur_default' => 'URL where a recurring transaction will be posted',
+    'url_button_default' => 'URL of a custom button graphic for the confirmation page',
+    'url_site_test_default' => 'URL of the processor service provider website in test mode',
+    'url_api_test_default' => 'URL where the data will be posted in test mode',
+    'url_recur_test_default' => 'URL where a recurring transaction will be posted in test mode',
+    'url_button_test_default' => 'URL of a custom button graphic for the confirmation page in test mode',
+    'billing_mode' => 'form', // Corresponds to the Processor Type: Form (1), Button (2), Special (3) or Notify (4)
     'is_recur' => 0,
-    'payment_type' => 1,
+    'payment_type' => 1, // Credit Card (1) or Debit Card (2)
   );
   civicrm_api('PaymentProcessorType', 'create', $params);
   _bbprioritycash_civix_civicrm_install();
@@ -74,7 +83,7 @@ function bbprioritycash_civicrm_uninstall() {
     civicrm_api('PaymentProcessorType', 'delete', $params);
   }
 
-  return _bbprioritycash_civix_civicrm_uninstall();
+  _bbprioritycash_civix_civicrm_uninstall();
 }
 
 /**

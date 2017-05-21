@@ -1,10 +1,10 @@
 <html>
   <body>    
-    <form action="{$redsysURL}" method="post">
+    <form action="{$bbprioritycashURL}" method="post">
   
     
     <input type="hidden" name="Ds_SignatureVersion" value="{$version}"/></br>
-    <input type="hidden" name="Ds_MerchantParameters" value="{$redsysParamsJSON}"/></br>
+    <input type="hidden" name="Ds_MerchantParameters" value="{$bbprioritycashParamsJSON}"/></br>
     <input type="hidden" name="Ds_Signature" value="{$signature}"/></br>
   
     </form>
