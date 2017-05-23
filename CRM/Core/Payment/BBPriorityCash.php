@@ -2,7 +2,7 @@
 
 /**
  *
- * @package Bbprioritycash
+ * @package BBPriorityCash [after Dummy Payment Processor]
  * @author Gregory Shilin <gshilin@gmail.com>
  */
 
@@ -10,14 +10,12 @@
  * BBPriorityCash payment processor
  */
 class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
-
   /**
    * mode of operation: live or test
    *
    * @var object
    */
   protected $_mode = NULL;
-
   protected $_params = array();
   protected $_doDirectPaymentResult = array();
 
@@ -31,9 +29,8 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $this->_doDirectPaymentResult = $doDirectPaymentResult;
     if (empty($this->_doDirectPaymentResult['trxn_id'])) {
       $this->_doDirectPaymentResult['trxn_id'] = array();
-    }
-    else {
-      $this->_doDirectPaymentResult['trxn_id'] = (array) $doDirectPaymentResult['trxn_id'];
+    } else {
+      $this->_doDirectPaymentResult['trxn_id'] = (array)$doDirectPaymentResult['trxn_id'];
     }
   }
 
@@ -53,7 +50,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
    *
    * @param $paymentProcessor
    *
-   * @return \CRM_Core_Payment_Dummy
    */
   public function __construct($mode, &$paymentProcessor) {
     $this->_mode = $mode;
@@ -71,6 +67,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
    *   the result in a nice formatted array (or an error object)
    */
   public function doDirectPayment(&$params) {
+    var_dump($this->_doDirectPaymentResult);
     if (!empty($this->_doDirectPaymentResult)) {
       $result = $this->_doDirectPaymentResult;
       $result['trxn_id'] = array_shift($this->_doDirectPaymentResult['trxn_id']);
@@ -83,8 +80,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       $trxn_id = str_replace('test_', '', $trxn_id);
       $trxn_id = intval($trxn_id) + 1;
       $params['trxn_id'] = 'test_' . $trxn_id . '_' . uniqid();
-    }
-    else {
+    } else {
       $query = "SELECT MAX(trxn_id) FROM civicrm_contribution WHERE trxn_id LIKE 'live_%'";
       $p = array();
       $trxn_id = strval(CRM_Core_Dao::singleValueQuery($query, $p));
@@ -126,8 +122,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $e = CRM_Core_Error::singleton();
     if ($errorCode) {
       $e->push($errorCode, 0, NULL, $errorMessage);
-    }
-    else {
+    } else {
       $e->push(9001, 0, NULL, 'Unknown System Error.');
     }
     return $e;
@@ -171,5 +166,4 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
   public function getEditableRecurringScheduleFields() {
     return array('amount', 'next_sched_contribution_date');
   }
-
 }
