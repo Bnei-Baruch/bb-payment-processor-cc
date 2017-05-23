@@ -37,7 +37,6 @@ function bbprioritycash_civicrm_install() {
     'signature_label' => 'Signature',
     'subject_label' => 'Subject',
     'class_name' => 'Payment_BBPriorityCash',
-    'url_site_label' => 'SITE',
     'url_site_default' => 'http://www.example.co.il/',
     'url_api_default' => 'http://www.example.co.il/',
     'url_recur_default' => 'http://www.example.co.il/',
