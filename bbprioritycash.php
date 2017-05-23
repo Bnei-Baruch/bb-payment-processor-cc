@@ -28,28 +28,28 @@ function bbprioritycash_civicrm_xmlMenu(&$files) {
 function bbprioritycash_civicrm_install() {
   $params = array(
     'version' => 3,
-    'name' => 'BB-Priority CASH Payment Processor',
-    'title' => 'BB-Priority CASH Payment Processor',
+    'name' => 'BBP',
+    'title' => 'BB Priority CASH Payment Processor',
     'description' => 'Register Cash Payment in Priority',
-    'is_active' => 1,
+    'class_name' => 'Payment_BBPriorityCash',
+    'billing_mode' => 'notify', // Corresponds to the Processor Type: Form (1), Button (2), Special (3) or Notify (4)
     'user_name_label' => 'User Name',
     'password_label' => 'Password',
-    'signature_label' => 'Signature',
-    'subject_label' => 'Subject',
-    'class_name' => 'Payment_BBPriorityCash',
-//    'url_site_default' => 'http://www.example.co.il/',
+//    'signature_label' => 'Signature',
+//    'subject_label' => 'Subject',
+    'url_site_default' => 'http://www.example.co.il/',
 //    'url_api_default' => 'http://www.example.co.il/',
 //    'url_recur_default' => 'http://www.example.co.il/',
 //    'url_button_default' => 'http://www.example.co.il/',
-//    'url_site_test_default' => 'http://www.example.co.il/',
+    'url_site_test_default' => 'http://www.example.co.il/',
 //    'url_api_test_default' => 'http://www.example.co.il/',
 //    'url_recur_test_default' => 'http://www.example.co.il/',
 //    'url_button_test_default' => 'http://www.example.co.il/',
-    'billing_mode' => 'notify', // Corresponds to the Processor Type: Form (1), Button (2), Special (3) or Notify (4)
     'is_recur' => 0,
     'payment_type' => 1, // Credit Card (1) or Debit Card (2)
   );
-  civicrm_api('PaymentProcessorType', 'create', $params);
+
+  $result = civicrm_api('PaymentProcessorType', 'create', $params);
   _bbprioritycash_civix_civicrm_install();
 }
 
@@ -71,7 +71,7 @@ function bbprioritycash_civicrm_uninstall() {
   $params = array(
     'version' => 3,
     'sequential' => 1,
-    'name' => 'BB-Priority CASH Payment Processor',
+    'name' => 'BBP',
   );
   $result = civicrm_api('PaymentProcessorType', 'get', $params);
   if ($result["count"] == 1) {
