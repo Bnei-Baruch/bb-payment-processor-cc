@@ -9,7 +9,7 @@
 /**
  * BBPriorityCash payment processor
  */
-class CRM_Core_Payment_Bbpriority extends CRM_Core_Payment {
+class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
 
   /**
    * mode of operation: live or test
