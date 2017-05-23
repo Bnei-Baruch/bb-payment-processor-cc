@@ -45,7 +45,7 @@ function bbprioritycash_civicrm_install() {
     'url_api_test_default' => 'http://www.example.co.il/',
     'url_recur_test_default' => 'http://www.example.co.il/',
     'url_button_test_default' => 'http://www.example.co.il/',
-    'billing_mode' => 'button', // Corresponds to the Processor Type: Form (1), Button (2), Special (3) or Notify (4)
+    'billing_mode' => 'notify', // Corresponds to the Processor Type: Form (1), Button (2), Special (3) or Notify (4)
     'is_recur' => 0,
     'payment_type' => 1, // Credit Card (1) or Debit Card (2)
   );
