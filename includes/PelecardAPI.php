@@ -38,6 +38,8 @@ class PelecardAPI {
     $this->setParameter("SupportedCards", $cards);
 
     $json = $this->arrayToJson();
+    var_dump($json);
+    exit(0);
     $this->connect($json, '/init');
 
     return $this->getParameter('URL');
