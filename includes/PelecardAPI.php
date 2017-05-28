@@ -37,6 +37,8 @@ class PelecardAPI {
     ];
     $this->setParameter("SupportedCards", $cards);
 
+    var_dump($this->vars_pay); // ZZZ
+
     $json = $this->arrayToJson();
     $this->connect($json, '/init');
 
@@ -51,7 +53,6 @@ class PelecardAPI {
   }
 
   function connect($params, $action) {
-    var_dump($params); // ZZZ
     $ch = curl_init('https://gateway20.pelecard.biz/PaymentGW' . $action);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
     curl_setopt($ch, CURLOPT_POSTFIELDS, $params);

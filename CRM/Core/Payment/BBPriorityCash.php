@@ -300,7 +300,8 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $result = $miObj->getRedirectUrl();
     $error = $result[0];
     if ($error > 0) {
-      printf("Error: %s\n", $error);
+      $message = $result[1];
+      printf("Error[%s]: %s\n", $error, $message);
       exit(1);
     } else {
       $url = $result[1];
