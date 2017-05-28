@@ -13,6 +13,7 @@ require_once 'includes/PelecardAPI.php';
  * BBPriorityCash payment processor
  */
 class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
+  CONST BBPriority_CURRENCY_EURO = 978;
   /**
    * mode of operation: live or test
    *
@@ -261,46 +262,22 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
         }
       }
     }
-    $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBPriorityCash&mode=' . $this->_mode . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams;
+    $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBPriorityCash&mode=' . $this->_mode
+      . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams;
 
-    // Force http if set
-    //    $redsys_settings = CRM_Core_BAO_Setting::getItem("Redsys Settings", 'redsys_settings');
-    //    if ($redsys_settings['ipn_http'] == '1')
-    //      $merchantUrl = preg_replace('/^https:/i', 'http:', $merchantUrl);
-
-    // The payment processor id can be named payment_processor (contribution pages)
-    if (array_key_exists('payment_processor', $params)) {
-      $paymentProcessorId = $params['payment_processor'];
-    } elseif (array_key_exists('payment_processor_id', $params)) {
-      $paymentProcessorId = $params['payment_processor_id'];
-    }
-
-    // Get the terminal for this payment processor
-    //    if (array_key_exists('merchant_terminal_' . $paymentProcessorId, $redsys_settings)) {
-    //      if ($redsys_settings['merchant_terminal_' . $paymentProcessorId]) {
-    //        $merchantTerminal = $redsys_settings['merchant_terminal_' . $paymentProcessorId];
-    //      }
-    //    }
-
-    // Use the default terminal if the processor doesn't have an assigned one
-    //    if (!$merchantTerminal) {
-    //      $merchantTerminal = empty($redsys_settings['merchant_terminal']) ? 1 :
-    //        $redsys_settings['merchant_terminal'];
-    //    }
+    $merchantTerminal = 1;
 
     $miObj = new PelecardAPI;
     $miObj->setParameter("Ds_Merchant_Amount", $params["amount"] * 100);
     $miObj->setParameter("Ds_Merchant_Order", strval(self::formatAmount($params["contributionID"], 12)));
     $miObj->setParameter("Ds_Merchant_MerchantCode", $this->_paymentProcessor["user_name"]);
-    $miObj->setParameter("Ds_Merchant_Currency", self::REDSYS_CURRENCY_EURO);
-    $miObj->setParameter("Ds_Merchant_TransactionType", self::REDSYS_TRANSACTION_TYPE_OPERATION_STANDARD);
-    //    $miObj->setParameter("Ds_Merchant_Terminal", $merchantTerminal);
+    $miObj->setParameter("Ds_Merchant_Currency", self::BBPriority_CURRENCY_EURO);
+    $miObj->setParameter("Ds_Merchant_Terminal", $merchantTerminal);
     $miObj->setParameter("Ds_Merchant_MerchantURL", $merchantUrl);
     $miObj->setParameter("Ds_Merchant_UrlOK", $returnURL);
     $miObj->setParameter("Ds_Merchant_UrlKO", $cancelURL);
     $miObj->setParameter("Ds_Merchant_ProductDescription", $params["contributionType_name"]);
-    $miObj->setParameter("Ds_Merchant_Titular", $params["first_name"] . " " . $params["last_name"]);
-    $miObj->setParameter("Ds_Merchant_ConsumerLanguage", self::REDSYS_LANGUAGE_SPANISH);
+    $miObj->setParameter("Ds_Merchant_Title", $params["first_name"] . " " . $params["last_name"]);
 
     $version = "HMAC_SHA256_V1";
 
