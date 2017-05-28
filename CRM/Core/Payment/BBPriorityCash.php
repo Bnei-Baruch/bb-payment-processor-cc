@@ -6,6 +6,9 @@
  * @author Gregory Shilin <gshilin@gmail.com>
  */
 
+require_once 'CRM/Core/Payment.php';
+require_once 'includes/PelecardAPI.php';
+
 /**
  * BBPriorityCash payment processor
  */
