@@ -38,14 +38,18 @@ class PelecardAPI {
     $this->setParameter("SupportedCards", $cards);
 
     $json = $this->arrayToJson();
-    var_dump($json);
-    exit(0);
     $this->connect($json, '/init');
 
-    return $this->getParameter('URL');
+    $error = $this->getParameter('Error');
+    if (is_array($error)) {
+      if ($error['ErrCode'] > 0) {
+        return array($error['ErrCode'], $error['ErrMsg']);
+      } else {
+        return array(0, $this->getParameter('URL'));
+      }
+    }
   }
 
-  // ZZZ This function does not support exceptions!!!
   function connect($params, $action) {
     var_dump($params); // ZZZ
     $ch = curl_init('https://gateway20.pelecard.biz/PaymentGW' . $action);
@@ -55,7 +59,6 @@ class PelecardAPI {
     curl_setopt($ch, CURLOPT_HTTPHEADER,
       array('Content-Type: application/json; charset=UTF-8', 'Content-Length: ' . strlen($params)));
     $result = curl_exec($ch);
-    var_dump($result); // ZZZ
     $this->stringToArray($result);
   }
 

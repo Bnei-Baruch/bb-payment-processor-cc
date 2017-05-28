@@ -297,8 +297,15 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       $miObj->setParameter("Language", 'EN');
     }
 
-    $url = $miObj->getRedirectUrl();
-    var_dump($url); // ZZZ
+    $result = $miObj->getRedirectUrl();
+    $error = $result[0];
+    if ($error > 0) {
+      printf("Error: %s\n", $error);
+      exit(1);
+    } else {
+      $url = $result[1];
+    }
+
     // Print the tpl to redirect to Pelecard
     $template = CRM_Core_Smarty::singleton();
     $template->assign('bbprioritycashURL', $url);
