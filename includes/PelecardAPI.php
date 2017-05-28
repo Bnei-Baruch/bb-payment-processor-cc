@@ -37,7 +37,9 @@ class PelecardAPI {
     ];
     $this->setParameter("SupportedCards", $cards);
 
-    var_dump($this->vars_pay); // ZZZ
+    //    echo '<pre>';
+    //    var_dump($this->vars_pay); // ZZZ
+    //    echo '</pre>';
 
     $json = $this->arrayToJson();
     $this->connect($json, '/init');

@@ -266,7 +266,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams;
 
     $miObj = new PelecardAPI;
-    $miObj->setParameter("user_name", $this->_paymentProcessor["user_name"]);
+    $miObj->setParameter("user", $this->_paymentProcessor["user_name"]);
     $miObj->setParameter("password", $this->_paymentProcessor["password"]);
     $miObj->setParameter("terminal", $this->_paymentProcessor["signature"]);
     $miObj->setParameter("LogoUrl", $this->_paymentProcessor["url_site"]);
