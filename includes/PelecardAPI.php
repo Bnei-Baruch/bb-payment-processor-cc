@@ -45,22 +45,24 @@ class PelecardAPI {
 
   // ZZZ This function does not support exceptions!!!
   function connect($params, $action) {
-    $ch = curl_init('https://gateway20.pelecard.biz/PaymentGW' + $action);
+    var_dump($params); // ZZZ
+    $ch = curl_init('https://gateway20.pelecard.biz/PaymentGW' . $action);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
     curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER,
-      array('Content-Type: application/json; charset=UTF-8', 'Content-Length: ' . strlen(params)));
+      array('Content-Type: application/json; charset=UTF-8', 'Content-Length: ' . strlen($params)));
     $result = curl_exec($ch);
+    var_dump($result); // ZZZ
     $this->stringToArray($result);
   }
 
-  /******  Convertir Array en Objeto JSON ******/
+  /******  Convert Hash to JSON ******/
   function arrayToJson() {
     return json_encode($this->vars_pay); //(PHP 5 >= 5.2.0)
   }
 
-  /******  Convertir String en Array ******/
+  /******  Convert String to Hash ******/
   function stringToArray($data) {
     $this->vars_pay = json_decode($data, true); //(PHP 5 >= 5.2.0)
   }

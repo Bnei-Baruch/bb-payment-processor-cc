@@ -268,7 +268,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $miObj = new PelecardAPI;
     $miObj->setParameter("user_name", $this->_paymentProcessor["user_name"]);
     $miObj->setParameter("password", $this->_paymentProcessor["password"]);
-    $miObj->setParameter("terminal", $this->_paymentProcessor["terminal"]);
+    $miObj->setParameter("terminal", $this->_paymentProcessor["signature"]);
     $miObj->setParameter("LogoUrl", $this->_paymentProcessor["url_site"]);
 
     $miObj->setParameter("UserKey", $params['qfKey']);
@@ -298,7 +298,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     }
 
     $url = $miObj->getRedirectUrl();
-
+    var_dump($url); // ZZZ
     // Print the tpl to redirect to Pelecard
     $template = CRM_Core_Smarty::singleton();
     $template->assign('bbprioritycashURL', $url);
