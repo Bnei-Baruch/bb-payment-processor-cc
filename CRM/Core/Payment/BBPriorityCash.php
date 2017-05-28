@@ -309,7 +309,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
 
     // Print the tpl to redirect to Pelecard
     $template = CRM_Core_Smarty::singleton();
-    $template->assign('bbprioritycashURL', $url);
+    $template->assign('url', $url);
     print $template->fetch('CRM/Core/Payment/Bbprioritycash.tpl');
 
     CRM_Utils_System::civiExit();
