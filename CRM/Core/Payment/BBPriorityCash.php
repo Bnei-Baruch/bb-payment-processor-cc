@@ -265,6 +265,10 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBPriorityCash&mode=' . $this->_mode
       . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams;
 
+    var_dump($merchantUrl);
+    var_dump($returnURL);
+    var_dump($cancelURL);
+    exit(0);
     $miObj = new PelecardAPI;
     $miObj->setParameter("user", $this->_paymentProcessor["user_name"]);
     $miObj->setParameter("password", $this->_paymentProcessor["password"]);
