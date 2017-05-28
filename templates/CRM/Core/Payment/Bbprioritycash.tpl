@@ -1,6 +1,6 @@
 <html>
 <body>
 <script type="text/javascript">
-    location = {$url};
+    location = '{$url}'';
 </script>
 </html>
