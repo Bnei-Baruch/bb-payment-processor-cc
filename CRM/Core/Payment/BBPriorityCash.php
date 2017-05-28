@@ -13,7 +13,7 @@ require_once 'includes/PelecardAPI.php';
  * BBPriorityCash payment processor
  */
 class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
-  CONST BBPriority_CURRENCY_EURO = 978;
+  CONST BBPriority_CURRENCY_NIS = 1;
   /**
    * mode of operation: live or test
    *
@@ -265,35 +265,44 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBPriorityCash&mode=' . $this->_mode
       . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams;
 
-    $merchantTerminal = 1;
-
     $miObj = new PelecardAPI;
-    $miObj->setParameter("Ds_Merchant_Amount", $params["amount"] * 100);
-    $miObj->setParameter("Ds_Merchant_Order", strval(self::formatAmount($params["contributionID"], 12)));
-    $miObj->setParameter("Ds_Merchant_MerchantCode", $this->_paymentProcessor["user_name"]);
-    $miObj->setParameter("Ds_Merchant_Currency", self::BBPriority_CURRENCY_EURO);
-    $miObj->setParameter("Ds_Merchant_Terminal", $merchantTerminal);
-    $miObj->setParameter("Ds_Merchant_MerchantURL", $merchantUrl);
-    $miObj->setParameter("Ds_Merchant_UrlOK", $returnURL);
-    $miObj->setParameter("Ds_Merchant_UrlKO", $cancelURL);
-    $miObj->setParameter("Ds_Merchant_ProductDescription", $params["contributionType_name"]);
-    $miObj->setParameter("Ds_Merchant_Title", $params["first_name"] . " " . $params["last_name"]);
+    $miObj->setParameter("user_name", $this->_paymentProcessor["user_name"]);
+    $miObj->setParameter("password", $this->_paymentProcessor["password"]);
+    $miObj->setParameter("terminal", $this->_paymentProcessor["terminal"]);
+    $miObj->setParameter("LogoUrl", $this->_paymentProcessor["url_site"]);
 
-    $version = "HMAC_SHA256_V1";
+    $miObj->setParameter("UserKey", $params['qfKey']);
 
-    $signature = $miObj->createMerchantSignature($this->_paymentProcessor["password"]);
+    $miObj->setParameter("GoodUrl", $returnURL);
+    $miObj->setParameter("ErrorUrl", $cancelURL);
+    $miObj->setParameter("CancelUrl", $cancelURL);
+    $miObj->setParameter("Total", $params["amount"] * 100);
+    $miObj->setParameter("Currency", self::BBPriority_CURRENCY_NIS); // ZZZ
+    $miObj->setParameter("MinPayments", 1);
+    $miObj->setParameter("MaxPayments", 1); // ZZZ
 
-    // Print the tpl to redirect and send POST variables to Pelecard
+    global $language;
+    $lang = strtoupper($language->language);
+    if ($lang == 'HE') {
+      $miObj->setParameter("TopText", 'BB כרטיסי אשראי');
+      $miObj->setParameter("BottomText", '© בני ברוך קבלה לעם');
+      $miObj->setParameter("Language", 'HE');
+    } elseif ($lang == 'RU') {
+      $miObj->setParameter("TopText", 'BB Кредитные Карты');
+      $miObj->setParameter("BottomText", '© Бней Барух Каббала лаАм');
+      $miObj->setParameter("Language", 'RU');
+    } else {
+      $miObj->setParameter("TopText", 'BB Credit Cards');
+      $miObj->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
+      $miObj->setParameter("Language", 'EN');
+    }
+
+    $url = $miObj->getRedirectUrl();
+
+    // Print the tpl to redirect to Pelecard
     $template = CRM_Core_Smarty::singleton();
-    $tpl = 'CRM/Core/Payment/Bbprioritycash.tpl';
-
-    $template->assign('signature', $signature);
-    $bbpParamsJSON = $miObj->createMerchantParameters();
-    $template->assign('bbprioritycashParamsJSON', $bbpParamsJSON);
-    $template->assign('version', $version);
-    $template->assign('bbprioritycashURL', $this->_paymentProcessor["url_site"]);
-
-    print $template->fetch($tpl);
+    $template->assign('bbprioritycashURL', $url);
+    print $template->fetch('CRM/Core/Payment/Bbprioritycash.tpl');
 
     CRM_Utils_System::civiExit();
   }

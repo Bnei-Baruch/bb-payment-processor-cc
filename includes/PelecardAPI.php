@@ -14,47 +14,44 @@ class PelecardAPI {
     return $this->vars_pay[$key];
   }
 
-
-  //////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////
-  ////////////					                  FUNCIONES AUXILIARES:							        ////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////
-  //////////////////////////////////////////////////////////////////////////////////////////////
-
-  /******  3DES Function  ******/
-  function encrypt_3DES($message, $key) {
-    // Se establece un IV por defecto
-    $bytes = array(0, 0, 0, 0, 0, 0, 0, 0); //byte [] IV = {0, 0, 0, 0, 0, 0, 0, 0}
-    $iv = implode(array_map("chr", $bytes)); //PHP 4 >= 4.0.2
-
-    // Se cifra
-    $ciphertext = mcrypt_encrypt(MCRYPT_3DES, $key, $message, MCRYPT_MODE_CBC, $iv); //PHP 4 >= 4.0.2
-    return $ciphertext;
+  /****** Request URL from PeleCard ******/
+  function getRedirectUrl() {
+    // Push constant parameters
+    $this->setParameter("ActionType", 'J4');
+    $this->setParameter("CardHolderName", 'hide');
+    $this->setParameter("CustomerIdField", 'hide');
+    $this->setParameter("Cvv2Field", 'must');
+    $this->setParameter("EmailField", 'hide');
+    $this->setParameter("TelField", 'hide');
+    $this->setParameter("FeedbackDataTransferMethod", 'POST');
+    $this->setParameter("FirstPayment", 'auto');
+    $this->setParameter("ShopNo", 1000); // ZZZ
+    $this->setParameter("SetFocus", 'CC');
+    $this->setParameter("HiddenPelecardLogo", true);
+    $cards = [
+      "Amex" => true,
+      "Diners" => false,
+      "Isra" => true,
+      "Master" => true,
+      "Visa" => true,
+    ];
+    $this->setParameter("SupportedCards", $cards);
+    $json = $this->arrayToJson();
+    var_dump($json);
+    exit(0);
+    $res = $this->connect($json, '/init');
+    $err = $res[0];
+    $msg = $res[1];
+    if ($err == 0) {
+      $msg = $msg['URL'];
+    }
+    return array($err, $msg);
   }
 
-  /******  Base64 Functions  ******/
-  function base64_url_encode($input) {
-    return strtr(base64_encode($input), '+/', '-_');
-  }
+  function connect($params, $action) {
 
-  function encodeBase64($data) {
-    $data = base64_encode($data);
-    return $data;
-  }
 
-  function base64_url_decode($input) {
-    return base64_decode(strtr($input, '-_', '+/'));
-  }
-
-  function decodeBase64($data) {
-    $data = base64_decode($data);
-    return $data;
-  }
-
-  /******  MAC Function ******/
-  function mac256($ent, $key) {
-    $res = hash_hmac('sha256', $ent, $key, true);//(PHP 5 >= 5.1.2)
-    return $res;
+    return array(0, 'Initialized');
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +62,6 @@ class PelecardAPI {
 
   /******  Obtener Número de pedido ******/
   function getOrder() {
-    $numPedido = "";
     if (empty($this->vars_pay['DS_MERCHANT_ORDER'])) {
       $numPedido = $this->vars_pay['Ds_Merchant_Order'];
     } else {
