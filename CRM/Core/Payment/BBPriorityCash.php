@@ -273,9 +273,10 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
 
     $miObj->setParameter("UserKey", $params['qfKey']);
 
-    $miObj->setParameter("GoodUrl", $merchantUrl);
-    $miObj->setParameter("ErrorUrl", $cancelURL);
-    $miObj->setParameter("CancelUrl", $cancelURL);
+    $sandBoxUrl = 'https://gateway20.pelecard.biz/sandbox/landingpage';
+    $miObj->setParameter("GoodUrl", $sandBoxUrl);
+    $miObj->setParameter("ErrorUrl", $sandBoxUrl);
+    $miObj->setParameter("CancelUrl", $sandBoxUrl);
     $miObj->setParameter("Total", $params["amount"] * 100);
     $miObj->setParameter("Currency", self::BBPriority_CURRENCY_NIS); // ZZZ
     $miObj->setParameter("MinPayments", 1);
