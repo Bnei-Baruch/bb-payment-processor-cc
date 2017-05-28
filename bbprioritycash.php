@@ -32,16 +32,16 @@ function bbprioritycash_civicrm_install() {
     'title' => 'BB Priority CASH Payment Processor',
     'description' => 'Register Cash Payment in Priority',
     'class_name' => 'Payment_BBPriorityCash',
-    'billing_mode' => 'form', // Corresponds to the Processor Type: Form (1), Button (2), Special (3) or Notify (4)
-    'user_name_label' => 'User Name',
+    'billing_mode' => 'notify', // Corresponds to the Processor Type: Form (1), Button (2), Special (3) or Notify (4)
+    'user_name_label' => 'User',
     'password_label' => 'Password',
-//    'signature_label' => 'Signature',
+    'signature_label' => 'Terminal',
 //    'subject_label' => 'Subject',
-    'url_site_default' => 'http://www.example.co.il/',
+//    'url_site_default' => 'http://www.example.co.il/',
 //    'url_api_default' => 'http://www.example.co.il/',
 //    'url_recur_default' => 'http://www.example.co.il/',
 //    'url_button_default' => 'http://www.example.co.il/',
-    'url_site_test_default' => 'http://www.example.co.il/',
+//    'url_site_test_default' => 'http://www.example.co.il/',
 //    'url_api_test_default' => 'http://www.example.co.il/',
 //    'url_recur_test_default' => 'http://www.example.co.il/',
 //    'url_button_test_default' => 'http://www.example.co.il/',
@@ -49,7 +49,7 @@ function bbprioritycash_civicrm_install() {
     'payment_type' => 1, // Credit Card (1) or Debit Card (2)
   );
 
-  $result = civicrm_api('PaymentProcessorType', 'create', $params);
+  civicrm_api('PaymentProcessorType', 'create', $params);
   _bbprioritycash_civix_civicrm_install();
 }
 
