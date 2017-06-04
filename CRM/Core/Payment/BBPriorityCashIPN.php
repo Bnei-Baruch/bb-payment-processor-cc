@@ -241,7 +241,6 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
       'PelecardStatusCode' => self::retrieve('PelecardStatusCode', 'String', 'POST', true),
       'ConfirmationKey' => self::retrieve('ConfirmationKey', 'String', 'POST', true),
       'UserKey' => self::retrieve('UserKey', 'String', 'POST', true),
-      'TotalX100' => self::retrieve('TotalX100', 'String', 'POST', true),
     );
 
     $ids = array(
@@ -289,7 +288,7 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
     $value = CRM_Utils_Request::retrieve($name, $type, $store, false, null, $location);
     if ($abort && $value === null) {
       CRM_Core_Error::debug_log_message("Could not find an entry for $name in $location");
-      echo "Failure: Missing Parameter<p>";
+      echo "Failure: Missing Parameter: $name<p>";
       exit();
     }
     return $value;

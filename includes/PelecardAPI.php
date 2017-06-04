@@ -77,7 +77,6 @@ class PelecardAPI {
     $PelecardStatusCode = $data['PelecardStatusCode'];
     $ConfirmationKey = $data['ConfirmationKey'];
     $UserKey = $data['UserKey'];
-    $TotalX100 = $data['TotalX100'];
 
     $this->vars_pay = [];
     $this->setParameter("user", $processor["user_name"]);
