@@ -262,7 +262,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
         }
       }
     }
-    $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBPriorityCash&mode=' . $this->_mode
+    $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBP&mode=' . $this->_mode
       . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams;
 
     $miObj = new PelecardAPI;
@@ -274,7 +274,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $miObj->setParameter("UserKey", $params['qfKey']);
 
     //    $sandBoxUrl = 'https://gateway20.pelecard.biz/sandbox/landingpage?authnum=123';
-    $miObj->setParameter("GoodUrl", $merchantUrl);
+    $miObj->setParameter("GoodUrl", $merchantUrl); // ReturnUrl should be used _AFTER_ payment confirmation
     $miObj->setParameter("ErrorUrl", $cancelURL);
     $miObj->setParameter("CancelUrl", $cancelURL);
     $miObj->setParameter("Total", $params["amount"] * 100);
@@ -302,8 +302,8 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $error = $result[0];
     if ($error > 0) {
       $message = $result[1];
-      printf("Error[%s]: %s\n", $error, $message);
-      exit(1);
+      CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error, "message" => $message]);
+      return FALSE;
     } else {
       $url = $result[1];
     }
@@ -318,7 +318,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
 
   public function handlePaymentNotification() {
     $input = $ids = $objects = array();
-    $ipn = new CRM_Core_Payment_bbprioritycashIPN();
+    $ipn = new CRM_Core_Payment_BBPriorityCashIPN();
 
     // load vars in $input, &ids
     $ipn->getInput($input, $ids);
