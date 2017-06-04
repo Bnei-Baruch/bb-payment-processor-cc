@@ -334,7 +334,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       'payment_processor_type_id' => $paymentProcessorTypeID,
       'return' => 'id',
     ));
-    if (!$ipn->validateData($this->_paymentProcessor, $input, $ids, $objects, TRUE, $paymentProcessorID)) {
+    if (!$ipn->validateResult($this->_paymentProcessor, $input, $ids, $objects, TRUE, $paymentProcessorID)) {
       // CRM_Core_Error::debug_log_message("bbprioritycash Validation failed");
       echo("bbprioritycash Validation failed"); exit();
       return FALSE;

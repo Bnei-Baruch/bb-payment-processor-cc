@@ -249,7 +249,7 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
     }
   }
 
-  function validateData($paymentProcessor, &$input, &$ids, &$objects, $required = TRUE, $paymentProcessorID = NULL) {
+  function validateResult($paymentProcessor, &$input, &$ids, &$objects, $required = TRUE, $paymentProcessorID = NULL) {
     // This also initializes $objects
     if (!parent::validateData($input, $ids, $objects, $required, $paymentProcessorID)) {
       return false;
