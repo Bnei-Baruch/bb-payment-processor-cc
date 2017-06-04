@@ -193,20 +193,21 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
 
     if (!$recur) {
       if ($contribution->total_amount != $input['amount']) {
-        CRM_Core_Error::debug_log_message("Amount values dont match between database and IPN request");
+        CRM_Core_Error::debug_log_message("Amount values don't match between database and IPN request");
         echo "Failure: Amount values dont match between database and IPN request<p>";
+        exit();
         return FALSE;
       }
     }
 
     $transaction = new CRM_Core_Transaction();
-    if ($input['Ds_Response'] != self::REDSYS_RESPONSE_CODE_ACCEPTED) {
-      $error = self::trimAmount($input['Ds_Response']);
-      if (array_key_exists($error, $this->_errors)) {
-        $input['reasonCode'] = $this->_errors[$error];
-      }
+    if ($input['PelecardStatusCode'] != self::BBP_RESPONSE_CODE_ACCEPTED) {
+      //      $error = self::trimAmount($input['Ds_Response']);
+      //      if (array_key_exists($error, $this->_errors)) {
+      //        $input['reasonCode'] = $this->_errors[$error];
+      //      }
 
-      CRM_Core_Error::debug_log_message("Redsys IPN Response: About to cancel contr \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE) . "\n objects: " . print_r($objects, TRUE));
+      CRM_Core_Error::debug_log_message("BBP IPN Response: About to cancel contribution \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE) . "\n objects: " . print_r($objects, TRUE));
       return $this->cancelled($objects, $transaction, $input);
     }
     // check if contribution is already completed, if so we ignore this ipn
@@ -239,7 +240,8 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
       'PelecardTransactionId' => self::retrieve('PelecardTransactionId', 'String', 'POST', true),
       'PelecardStatusCode' => self::retrieve('PelecardStatusCode', 'String', 'POST', true),
       'ConfirmationKey' => self::retrieve('ConfirmationKey', 'String', 'POST', true),
-      'UserKey' => self::retrieve('2c55f79e7165f5dec903a5f3c46ad30a_2881', 'String', 'POST', true),
+      'UserKey' => self::retrieve('UserKey', 'String', 'POST', true),
+      'TotalX100' => self::retrieve('TotalX100', 'String', 'POST', true),
     );
 
     $ids = array(
@@ -257,19 +259,29 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
   }
 
   function validateData($paymentProcessor, &$input, &$ids, &$objects, $required = TRUE, $paymentProcessorID = NULL) {
-    $signatureNotif = $this->_bbpAPI->createMerchantSignatureNotif($paymentProcessor["password"], $input["Ds_MerchantParameters"]);
-
-    if ($input['Ds_MerchantCode'] != $paymentProcessor["user_name"]) {
-      CRM_Core_Error::debug_log_message("Redsys Response param Ds_MerchantCode incorrect");
+    // This also initializes $objects
+    if (!parent::validateData($input, $ids, $objects, $required, $paymentProcessorID)) {
       return false;
     }
 
-    if ($signatureNotif !== $input['Ds_Signature']) {
-      CRM_Core_Error::debug_log_message("Redsys signature doesn't match");
+    if ($input['UserKey'] != $input['qfKey']) {
+      CRM_Core_Error::debug_log_message("Pelecard Response param UserKey is invalid");
+      echo "<pre>Pelecard Response param UserKey is invalid</pre>";
+      exit();
       return false;
     }
 
-    return parent::validateData($input, $ids, $objects, $required, $paymentProcessorID);
+    $contribution = &$objects['contribution'];
+    $valid = $this->_bbpAPI->validateData($paymentProcessor, $input, $contribution->total_amount);
+
+    if (!$valid) {
+      CRM_Core_Error::debug_log_message("Pelecard Response is invalid");
+      echo "<pre>Pelecard Response is invalid</pre>";
+      exit();
+      return false;
+    }
+
+    return true;
   }
 
   static function retrieve($name, $type, $location = 'POST', $abort = true) {

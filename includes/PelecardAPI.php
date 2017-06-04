@@ -25,7 +25,7 @@ class PelecardAPI {
     $this->setParameter("TelField", 'hide');
     $this->setParameter("FeedbackDataTransferMethod", 'POST');
     $this->setParameter("FirstPayment", 'auto');
-    $this->setParameter("ShopNo", 1000); // ZZZ
+    $this->setParameter("ShopNo", 1000); // TODO: What should be shop number?
     $this->setParameter("SetFocus", 'CC');
     $this->setParameter("HiddenPelecardLogo", true);
     $cards = [
@@ -36,10 +36,6 @@ class PelecardAPI {
       "Visa" => true,
     ];
     $this->setParameter("SupportedCards", $cards);
-
-    //    echo '<pre>';
-    //    var_dump($this->vars_pay); // ZZZ
-    //    echo '</pre>';
 
     $json = $this->arrayToJson();
     $this->connect($json, '/init');
@@ -73,5 +69,84 @@ class PelecardAPI {
   /******  Convert String to Hash ******/
   function stringToArray($data) {
     $this->vars_pay = json_decode($data, true); //(PHP 5 >= 5.2.0)
+  }
+
+  /****** Validate Response ******/
+  function validateData($processor, $data, $amount) {
+    $PelecardTransactionId = $data['PelecardTransactionId'];
+    $PelecardStatusCode = $data['PelecardStatusCode'];
+    $ConfirmationKey = $data['ConfirmationKey'];
+    $UserKey = $data['UserKey'];
+    $TotalX100 = $data['TotalX100'];
+
+    $this->vars_pay = [];
+    $this->setParameter("user", $processor["user_name"]);
+    $this->setParameter("password", $processor["password"]);
+    $this->setParameter("terminal", $processor["signature"]);
+    $this->setParameter("TransactionId", $PelecardTransactionId);
+
+    $json = $this->arrayToJson();
+    $this->connect($json, '/GetTransaction');
+
+    $error = $this->getParameter('Error');
+    if (is_array($error) && $error['ErrCode'] > 0) {
+      echo "<pre>";
+      var_dump($error['ErrCode']);
+      var_dump($error['ErrMsg']);
+      echo "</pre>";
+      exit();
+      CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
+      return false;
+    }
+
+    $ShvaResult = $this->getParameter('ShvaResult');
+    $VoucherId = $this->getParameter('VoucherId');
+    $TransactionPelecardId = $this->getParameter('TransactionPelecardId');
+    $ShvaFileNumber = $this->getParameter('ShvaFileNumber');
+    $StationNumber = $this->getParameter('StationNumber');
+    $Reciept = $this->getParameter('Reciept');
+    $JParam = $this->getParameter('JParam');
+    $CreditCardNumber = $this->getParameter('CreditCardNumber');
+    $CreditCardExpDate = $this->getParameter('CreditCardExpDate');
+    $CreditCardCompanyClearer = $this->getParameter('CreditCardCompanyClearer');
+    $CreditCardCompanyIssuer = $this->getParameter('CreditCardCompanyIssuer');
+    $CreditType = $this->getParameter('CreditType');
+    $CreditCardAbroadCard = $this->getParameter('CreditCardAbroadCard');
+    $DebitType = $this->getParameter('DebitType');
+    $DebitCode = $this->getParameter('DebitCode');
+    $DebitTotal = $this->getParameter('DebitTotal');
+    $DebitCurrency = $this->getParameter('DebitCurrency');
+    $TotalPayments = $this->getParameter('TotalPayments');
+    $FirstPaymentTotal = $this->getParameter('FirstPaymentTotal');
+    $FixedPaymentTotal = $this->getParameter('FixedPaymentTotal');
+    $CreditCardBrand = $this->getParameter('CreditCardBrand');
+    $CardHebrewName = $this->getParameter('CardHebrewName');
+    $ShvaOutput = $this->getParameter('ShvaOutput');
+    $ApprovedBy = $this->getParameter('ApprovedBy');
+    $TransactionInitTime = $this->getParameter('TransactionInitTime');
+    $TransactionUpdateTime = $this->getParameter('TransactionUpdateTime');
+
+    $this->vars_pay = [];
+    $this->setParameter("ConfirmationKey", $ConfirmationKey);
+    $this->setParameter("UniqueKey", $UserKey);
+    $this->setParameter("TotalX100", $amount * 100);
+
+
+    $json = $this->arrayToJson();
+    $this->connect($json, '/ValidateByUniqueKey');
+
+    $error = $this->getParameter('Error');
+    if (is_array($error) && $error['ErrCode'] > 0) {
+      echo "<pre>";
+      var_dump($error['ErrCode']);
+      var_dump($error['ErrMsg']);
+      echo "</pre>";
+      exit();
+      CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
+      return false;
+    }
+
+    // TODO: Store all parameters in DB
+    return true;
   }
 }

@@ -263,6 +263,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
         }
       }
     }
+    
     $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBP&mode=' . $this->_mode
       . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams;
 
@@ -279,9 +280,9 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $miObj->setParameter("ErrorUrl", $cancelURL);
     $miObj->setParameter("CancelUrl", $cancelURL);
     $miObj->setParameter("Total", $params["amount"] * 100);
-    $miObj->setParameter("Currency", self::BBPriority_CURRENCY_NIS); // ZZZ
+    $miObj->setParameter("Currency", self::BBPriority_CURRENCY_NIS); // TODO: Support other currencies
     $miObj->setParameter("MinPayments", 1);
-    $miObj->setParameter("MaxPayments", 1); // ZZZ
+    $miObj->setParameter("MaxPayments", 1); // TODO: Support payments
 
     global $language;
     $lang = strtoupper($language->language);
@@ -323,13 +324,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
 
     // load vars in $input, &ids
     $ipn->getInput($input, $ids);
-    CRM_Core_Error::debug_log_message("bbprioritycash IPN Response: Parameteres received \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE));
-        echo "<pre>bbprioritycash IPN Response: Parameteres received\n input: ";
-        print_r($input, TRUE);
-        echo "\n ids: ";
-        print_r($ids, TRUE);
-        echo '</pre>';
-        exit(1);
+    // CRM_Core_Error::debug_log_message("bbprioritycash IPN Response: Parameteres received \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE));
 
     $paymentProcessorTypeID = CRM_Core_DAO::getFieldValue('CRM_Financial_DAO_PaymentProcessorType', $this->_processorName, 'id', 'name');
     $paymentProcessorID = (int)civicrm_api3('PaymentProcessor', 'getvalue', array(
@@ -339,7 +334,8 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       'return' => 'id',
     ));
     if (!$ipn->validateData($this->_paymentProcessor, $input, $ids, $objects, TRUE, $paymentProcessorID)) {
-      CRM_Core_Error::debug_log_message("bbprioritycash Validation failed");
+      // CRM_Core_Error::debug_log_message("bbprioritycash Validation failed");
+      echo("bbprioritycash Validation failed"); exit();
       return FALSE;
     }
 
