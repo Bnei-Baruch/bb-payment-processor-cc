@@ -324,6 +324,12 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     // load vars in $input, &ids
     $ipn->getInput($input, $ids);
     CRM_Core_Error::debug_log_message("bbprioritycash IPN Response: Parameteres received \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE));
+        echo "<pre>bbprioritycash IPN Response: Parameteres received\n input: ";
+        print_r($input, TRUE);
+        echo "\n ids: ";
+        print_r($ids, TRUE);
+        echo '</pre>';
+        exit(1);
 
     $paymentProcessorTypeID = CRM_Core_DAO::getFieldValue('CRM_Financial_DAO_PaymentProcessorType', $this->_processorName, 'id', 'name');
     $paymentProcessorID = (int)civicrm_api3('PaymentProcessor', 'getvalue', array(

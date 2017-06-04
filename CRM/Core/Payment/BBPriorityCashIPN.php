@@ -1,16 +1,14 @@
 <?php
 
 class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
-
   CONST BBP_RESPONSE_CODE_ACCEPTED = '000';
-
   private $_errors;
   private $_bbpAPI;
 
   function __construct() {
     parent::__construct();
 
-    $this->_bbpAPI  = new PelecardAPI;
+    $this->_bbpAPI = new PelecardAPI;
     $this->errors = [
       '000' => 'Permitted transaction.',
       '001' => 'The card is blocked, confiscate it.',
@@ -204,11 +202,11 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
     $transaction = new CRM_Core_Transaction();
     if ($input['Ds_Response'] != self::REDSYS_RESPONSE_CODE_ACCEPTED) {
       $error = self::trimAmount($input['Ds_Response']);
-      if(array_key_exists($error, $this->_errors)) {
+      if (array_key_exists($error, $this->_errors)) {
         $input['reasonCode'] = $this->_errors[$error];
       }
 
-      CRM_Core_Error::debug_log_message("Redsys IPN Response: About to cancel contr \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE) . "\n objects: " . print_r($objects, TRUE) );
+      CRM_Core_Error::debug_log_message("Redsys IPN Response: About to cancel contr \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE) . "\n objects: " . print_r($objects, TRUE));
       return $this->cancelled($objects, $transaction, $input);
     }
     // check if contribution is already completed, if so we ignore this ipn
@@ -219,49 +217,41 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
       return TRUE;
     }
 
-    CRM_Core_Error::debug_log_message("Redsys IPN Response: About complete trans \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE) . "\n objects: " . print_r($objects, TRUE) );
+    CRM_Core_Error::debug_log_message("Redsys IPN Response: About complete trans \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE) . "\n objects: " . print_r($objects, TRUE));
     return $this->completeTransaction($input, $ids, $objects, $transaction, $recur);
   }
 
   function getInput(&$input, &$ids) {
     $input = array(
       // GET Parameters
-      'module'             => self::retrieve('md', 'String', 'GET', true),
-      'component'          => self::retrieve('md', 'String', 'GET', true),
-      'qfKey'              => self::retrieve('qfKey', 'String', 'GET', false),
-      'contributionID'     => self::retrieve('contributionID', 'String', 'GET', true),
-      'contactID'          => self::retrieve('contactID', 'String', 'GET', true),
-      'eventID'            => self::retrieve('eventID', 'String', 'GET', false),
-      'participantID'      => self::retrieve('participantID', 'String', 'GET', false),
-      'membershipID'       => self::retrieve('membershipID', 'String', 'GET', false),
+      'module' => self::retrieve('md', 'String', 'GET', true),
+      'component' => self::retrieve('md', 'String', 'GET', true),
+      'qfKey' => self::retrieve('qfKey', 'String', 'GET', false),
+      'contributionID' => self::retrieve('contributionID', 'String', 'GET', true),
+      'contactID' => self::retrieve('contactID', 'String', 'GET', true),
+      'eventID' => self::retrieve('eventID', 'String', 'GET', false),
+      'participantID' => self::retrieve('participantID', 'String', 'GET', false),
+      'membershipID' => self::retrieve('membershipID', 'String', 'GET', false),
       'contributionPageID' => self::retrieve('contributionPageID', 'String', 'GET', false),
-      'relatedContactID'   => self::retrieve('relatedContactID', 'String', 'GET', false),
-      'onBehalfDupeAlert'  => self::retrieve('onBehalfDupeAlert', 'String', 'GET', false),
+      'relatedContactID' => self::retrieve('relatedContactID', 'String', 'GET', false),
+      'onBehalfDupeAlert' => self::retrieve('onBehalfDupeAlert', 'String', 'GET', false),
       // POST Parameters
-      'Ds_SignatureVersion'   => self::retrieve('Ds_SignatureVersion', 'String', 'POST', true),
-      'Ds_MerchantParameters' => self::retrieve('Ds_MerchantParameters', 'String', 'POST', true),
-      'Ds_Signature'          => self::retrieve('Ds_Signature', 'String', 'POST', true),
+      'PelecardTransactionId' => self::retrieve('PelecardTransactionId', 'String', 'POST', true),
+      'PelecardStatusCode' => self::retrieve('PelecardStatusCode', 'String', 'POST', true),
+      'ConfirmationKey' => self::retrieve('ConfirmationKey', 'String', 'POST', true),
+      'UserKey' => self::retrieve('2c55f79e7165f5dec903a5f3c46ad30a_2881', 'String', 'POST', true),
     );
-    $decodecResponseJson           = $this->_bbpAPI->decodeMerchantParameters($input["Ds_MerchantParameters"]);
-    $decodecResponse               = json_decode($decodecResponseJson);
-    $input['Ds_MerchantCode']      = $decodecResponse->Ds_MerchantCode;
-    $input['Ds_Response']          = $decodecResponse->Ds_Response;
-    $input['Ds_AuthorisationCode'] = $decodecResponse->Ds_AuthorisationCode;
-    $input['Ds_Amount']            = $decodecResponse->Ds_Amount;
-    $input['amount']               = number_format(($decodecResponse->Ds_Amount / 100), 2);
-    $input['trxn_id']              = $decodecResponse->Ds_AuthorisationCode;
 
     $ids = array(
-      'contribution'  => $input['contributionID'],
-      'contact'       => $input['contactID'],
+      'contribution' => $input['contributionID'],
+      'contact' => $input['contactID'],
     );
     if ($input['module'] == "event") {
-      $ids['event']       = $input['eventID'];
+      $ids['event'] = $input['eventID'];
       $ids['participant'] = $input['participantID'];
-    }
-    else {
-      $ids['membership']          = $input['membershipID'];
-      $ids['related_contact']     = $input['relatedContactID'];
+    } else {
+      $ids['membership'] = $input['membershipID'];
+      $ids['related_contact'] = $input['relatedContactID'];
       $ids['onbehalf_dupe_alert'] = $input['onBehalfDupeAlert'];
     }
   }
@@ -269,12 +259,12 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
   function validateData($paymentProcessor, &$input, &$ids, &$objects, $required = TRUE, $paymentProcessorID = NULL) {
     $signatureNotif = $this->_bbpAPI->createMerchantSignatureNotif($paymentProcessor["password"], $input["Ds_MerchantParameters"]);
 
-    if($input['Ds_MerchantCode'] != $paymentProcessor["user_name"]){
+    if ($input['Ds_MerchantCode'] != $paymentProcessor["user_name"]) {
       CRM_Core_Error::debug_log_message("Redsys Response param Ds_MerchantCode incorrect");
       return false;
     }
 
-    if ($signatureNotif !== $input['Ds_Signature']){
+    if ($signatureNotif !== $input['Ds_Signature']) {
       CRM_Core_Error::debug_log_message("Redsys signature doesn't match");
       return false;
     }
@@ -293,8 +283,7 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
     return $value;
   }
 
-  static function trimAmount($amount, $pad = '0'){
+  static function trimAmount($amount, $pad = '0') {
     return ltrim(trim($amount), $pad);
   }
-
 }
