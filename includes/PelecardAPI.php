@@ -69,10 +69,15 @@ class PelecardAPI {
   /******  Convert String to Hash ******/
   function stringToArray($data) {
     $this->vars_pay = json_decode($data, true); //(PHP 5 >= 5.2.0)
+    echo "<pre>stringToArray $data=\n";
+    var_dump($data);
+    echo "\nvars_pay=\n";
+    var_dump($this->vars_pay);
+    echo "</pre>";
   }
 
   /****** Validate Response ******/
-  function validateData($processor, $data, $amount) {
+  function validateResponse($processor, $data, $amount) {
     $PelecardTransactionId = $data['PelecardTransactionId'];
     $PelecardStatusCode = $data['PelecardStatusCode'];
     $ConfirmationKey = $data['ConfirmationKey'];
