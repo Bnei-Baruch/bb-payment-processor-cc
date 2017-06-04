@@ -58,11 +58,11 @@ class PelecardAPI {
     curl_setopt($ch, CURLOPT_HTTPHEADER,
       array('Content-Type: application/json; charset=UTF-8', 'Content-Length: ' . strlen($params)));
     $result = curl_exec($ch);
-    if ($result == 0) {
+    if ($result == '0') {
       $this->vars_pay = [
         'Error' => array( -1, 'Error')
       ];
-    } elseif ($result == 1) {
+    } elseif ($result == '1') {
       $this->vars_pay = [
         'Identified' => array( 0, 'Identified')
       ];
@@ -79,11 +79,6 @@ class PelecardAPI {
   /******  Convert String to Hash ******/
   function stringToArray($data) {
     $this->vars_pay = json_decode($data, true); //(PHP 5 >= 5.2.0)
-    echo "<pre>stringToArray $data=\n";
-    var_dump($data);
-    echo "\nvars_pay=\n";
-    var_dump($this->vars_pay);
-    echo "</pre>";
   }
 
   /****** Validate Response ******/
@@ -104,11 +99,6 @@ class PelecardAPI {
 
     $error = $this->getParameter('Error');
     if (is_array($error) && $error['ErrCode'] > 0) {
-      echo "<pre>";
-      var_dump($error['ErrCode']);
-      var_dump($error['ErrMsg']);
-      echo "</pre>";
-      exit();
       CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
       return false;
     }
@@ -152,11 +142,6 @@ class PelecardAPI {
 
     $error = $this->getParameter('Error');
     if (is_array($error) && $error['ErrCode'] > 0) {
-      echo "<pre>";
-      var_dump($error['ErrCode']);
-      var_dump($error['ErrMsg']);
-      echo "</pre>";
-      exit();
       CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
       return false;
     }

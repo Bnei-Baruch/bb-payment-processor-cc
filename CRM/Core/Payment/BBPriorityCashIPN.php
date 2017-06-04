@@ -252,15 +252,11 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
   function validateResult($paymentProcessor, &$input, &$ids, &$objects, $required = TRUE, $paymentProcessorID = NULL) {
     // This also initializes $objects
     if (!parent::validateData($input, $ids, $objects, $required, $paymentProcessorID)) {
-      echo "<pre>Pelecard parent::validateData is invalid</pre>";
-      exit();
       return false;
     }
 
     if ($input['UserKey'] != $input['qfKey']) {
       CRM_Core_Error::debug_log_message("Pelecard Response param UserKey is invalid");
-      echo "<pre>Pelecard Response param UserKey is invalid</pre>";
-      exit();
       return false;
     }
 
@@ -269,8 +265,6 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
 
     if (!$valid) {
       CRM_Core_Error::debug_log_message("Pelecard Response is invalid");
-      echo "<pre>Pelecard Response is invalid</pre>";
-      exit();
       return false;
     }
 
