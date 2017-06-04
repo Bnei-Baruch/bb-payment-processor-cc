@@ -58,7 +58,17 @@ class PelecardAPI {
     curl_setopt($ch, CURLOPT_HTTPHEADER,
       array('Content-Type: application/json; charset=UTF-8', 'Content-Length: ' . strlen($params)));
     $result = curl_exec($ch);
-    $this->stringToArray($result);
+    if ($result == 0) {
+      $this->vars_pay = [
+        'Error' => [ -1, 'Error']
+      ];
+    } elseif ($result == 1) {
+      $this->vars_pay = [
+        'Identified' => [ 0, 'Identified']
+      ];
+    } else {
+      $this->stringToArray($result);
+    }
   }
 
   /******  Convert Hash to JSON ******/
@@ -103,6 +113,8 @@ class PelecardAPI {
       return false;
     }
 
+    $this->stringToArray($this->getParameter('ResultData'));
+
     $ShvaResult = $this->getParameter('ShvaResult');
     $VoucherId = $this->getParameter('VoucherId');
     $TransactionPelecardId = $this->getParameter('TransactionPelecardId');
@@ -134,7 +146,6 @@ class PelecardAPI {
     $this->setParameter("ConfirmationKey", $ConfirmationKey);
     $this->setParameter("UniqueKey", $UserKey);
     $this->setParameter("TotalX100", $amount * 100);
-
 
     $json = $this->arrayToJson();
     $this->connect($json, '/ValidateByUniqueKey');
