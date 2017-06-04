@@ -8,6 +8,7 @@
 
 require_once 'CRM/Core/Payment.php';
 require_once 'includes/PelecardAPI.php';
+require_once 'BBPriorityCashIPN.php';
 
 /**
  * BBPriorityCash payment processor
