@@ -149,3 +149,17 @@ class PelecardAPI {
     return true;
   }
 }
+
+/******  Base64 Functions  ******/
+function base64_url_encode($input) {
+  return strtr(base64_encode($input), '+/', '-_');
+}
+
+function encodeBase64($data) {
+  $data = base64_encode($data);
+  return $data;
+}
+
+function base64_url_decode($input) {
+  return base64_decode(strtr($input, '-_', '+/'));
+}

@@ -263,9 +263,10 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
         }
       }
     }
-    
+
     $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBP&mode=' . $this->_mode
-      . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams;
+      . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
+      . '&returnURL=' . base64_url_encode($returnURL);
 
     $miObj = new PelecardAPI;
     $miObj->setParameter("user", $this->_paymentProcessor["user_name"]);
@@ -339,7 +340,18 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       return FALSE;
     }
 
-    return $ipn->single($input, $ids, $objects, FALSE, FALSE);
+    if ($ipn->single($input, $ids, $objects, FALSE, FALSE)) {
+      $returnURL = base64_url_decode($input['returnURL']);
+
+      // Print the tpl to redirect to success
+      $template = CRM_Core_Smarty::singleton();
+      $template->assign('url', $returnURL);
+      print $template->fetch('CRM/Core/Payment/Bbprioritycash.tpl');
+
+      CRM_Utils_System::civiExit();
+    } else {
+      return false;
+    }
   }
 
   static function formatAmount($amount, $size, $pad = 0) {

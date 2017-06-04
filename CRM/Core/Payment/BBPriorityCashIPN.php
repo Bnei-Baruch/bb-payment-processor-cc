@@ -191,15 +191,6 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
   function single(&$input, &$ids, &$objects, $recur = FALSE, $first = FALSE) {
     $contribution = &$objects['contribution'];
 
-    if (!$recur) {
-      if ($contribution->total_amount != $input['amount']) {
-        CRM_Core_Error::debug_log_message("Amount values don't match between database and IPN request");
-        echo "Failure: Amount values dont match between database and IPN request<p>";
-        exit();
-        return FALSE;
-      }
-    }
-
     $transaction = new CRM_Core_Transaction();
     if ($input['PelecardStatusCode'] != self::BBP_RESPONSE_CODE_ACCEPTED) {
       //      $error = self::trimAmount($input['Ds_Response']);
@@ -236,6 +227,7 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
       'contributionPageID' => self::retrieve('contributionPageID', 'String', 'GET', false),
       'relatedContactID' => self::retrieve('relatedContactID', 'String', 'GET', false),
       'onBehalfDupeAlert' => self::retrieve('onBehalfDupeAlert', 'String', 'GET', false),
+      'returnURL' => self::retrieve('returnURL', 'String', 'GET', false),
       // POST Parameters
       'PelecardTransactionId' => self::retrieve('PelecardTransactionId', 'String', 'POST', true),
       'PelecardStatusCode' => self::retrieve('PelecardStatusCode', 'String', 'POST', true),
