@@ -60,11 +60,11 @@ class PelecardAPI {
     $result = curl_exec($ch);
     if ($result == 0) {
       $this->vars_pay = [
-        'Error' => [ -1, 'Error']
+        'Error' => array( -1, 'Error')
       ];
     } elseif ($result == 1) {
       $this->vars_pay = [
-        'Identified' => [ 0, 'Identified']
+        'Identified' => array( 0, 'Identified')
       ];
     } else {
       $this->stringToArray($result);
