@@ -325,7 +325,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
 
     // load vars in $input, &ids
     $ipn->getInput($input, $ids);
-    // CRM_Core_Error::debug_log_message("bbprioritycash IPN Response: Parameteres received \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE));
 
     $paymentProcessorTypeID = CRM_Core_DAO::getFieldValue('CRM_Financial_DAO_PaymentProcessorType', $this->_processorName, 'id', 'name');
     $paymentProcessorID = (int)civicrm_api3('PaymentProcessor', 'getvalue', array(
@@ -341,6 +340,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     }
 
     if ($ipn->single($input, $ids, $objects, FALSE, FALSE)) {
+      CRM_Core_Error::debug_log_message("VALIDATION PASSED");
       $returnURL = base64_url_decode($input['returnURL']);
 
       // Print the tpl to redirect to success
@@ -350,6 +350,9 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
 
       CRM_Utils_System::civiExit();
     } else {
+      CRM_Core_Error::debug_log_message("VALIDATION FAILED");
+      echo("VALIDATION FAILED");
+      exit();
       return false;
     }
   }

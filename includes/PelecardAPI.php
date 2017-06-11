@@ -1,5 +1,4 @@
 <?php
-
 class PelecardAPI {
   /******  Array of request data ******/
   var $vars_pay = array();
@@ -11,7 +10,11 @@ class PelecardAPI {
 
   /******  Get parameter ******/
   function getParameter($key) {
-    return $this->vars_pay[$key];
+    if (isset($this->vars_pay[$key])) {
+      return $this->vars_pay[$key];
+    } else {
+      return NULL;
+    }
   }
 
   /****** Request URL from PeleCard ******/
@@ -78,15 +81,20 @@ class PelecardAPI {
 
   /******  Convert String to Hash ******/
   function stringToArray($data) {
-    $this->vars_pay = json_decode($data, true); //(PHP 5 >= 5.2.0)
+    if (is_array($data)) {
+      $this->vars_pay = $data;
+    } else {
+      $this->vars_pay = json_decode($data, true); //(PHP 5 >= 5.2.0)
+    }
   }
 
   /****** Validate Response ******/
-  function validateResponse($processor, $data, $amount) {
+  function validateResponse($processor, $data) {
     $PelecardTransactionId = $data['PelecardTransactionId'];
     $PelecardStatusCode = $data['PelecardStatusCode'];
     $ConfirmationKey = $data['ConfirmationKey'];
     $UserKey = $data['UserKey'];
+    $amount = $data['amount'];
 
     $this->vars_pay = [];
     $this->setParameter("user", $processor["user_name"]);

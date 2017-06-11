@@ -209,8 +209,8 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
       return TRUE;
     }
 
-    CRM_Core_Error::debug_log_message("Redsys IPN Response: About complete trans \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE) . "\n objects: " . print_r($objects, TRUE));
-    return $this->completeTransaction($input, $ids, $objects, $transaction, $recur);
+    $this->completeTransaction($input, $ids, $objects, $transaction, $recur);
+    return true;
   }
 
   function getInput(&$input, &$ids) {
@@ -252,6 +252,7 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
   function validateResult($paymentProcessor, &$input, &$ids, &$objects, $required = TRUE, $paymentProcessorID = NULL) {
     // This also initializes $objects
     if (!parent::validateData($input, $ids, $objects, $required, $paymentProcessorID)) {
+      CRM_Core_Error::debug_log_message("\n\nparent::validateResult: VALIDATION ERROR\n\n");
       return false;
     }
 
@@ -261,7 +262,8 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
     }
 
     $contribution = &$objects['contribution'];
-    $valid = $this->_bbpAPI->validateResponse($paymentProcessor, $input, $contribution->total_amount);
+    $input['amount'] = $contribution->total_amount;
+    $valid = $this->_bbpAPI->validateResponse($paymentProcessor, $input);
 
     if (!$valid) {
       CRM_Core_Error::debug_log_message("Pelecard Response is invalid");
