@@ -153,8 +153,30 @@ class PelecardAPI {
       CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
       return false;
     }
-
     // TODO: Store all parameters in DB
+    $db = new InvoiceDb();
+    if (!$db) {
+      echo $db->lastErrorMsg();
+    }
+
+    $db->create_table();
+    if(!$ret){
+      echo $db->lastErrorMsg();
+    }
+    $sql =<<<EOF
+      SELECT * from COMPANY;
+EOF;
+
+    $ret = $db->query($sql);
+    while($row = $ret->fetchArray(SQLITE3_ASSOC) ){
+      echo "ID = ". $row['ID'] . "<br/>";
+      echo "NAME = ". $row['NAME'] ."<br/>";
+      echo "ADDRESS = ". $row['ADDRESS'] ."<br/>";
+      echo "SALARY =  ".$row['SALARY'] ."<br/><br/>";
+    }
+
+    $db->close();
+    exit();
     return true;
   }
 }
@@ -171,4 +193,45 @@ function encodeBase64($data) {
 
 function base64_url_decode($input) {
   return base64_decode(strtr($input, '-_', '+/'));
+}
+
+class InvoiceDb extends SQLite3 {
+  function __construct() {
+    $this->open("db/test.db", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
+  }
+
+  function create_table() {
+    $sql =<<<EOF
+          CREATE TABLE IF NOT EXISTS company(
+          id INT PRIMARY KEY     NOT NULL,
+          name           TEXT    NOT NULL,
+          age            INT     NOT NULL,
+          address        CHAR(50),
+          salary         REAL);
+EOF;
+
+    $ret = $this->exec($sql);
+    if(!$ret){
+      echo $db->lastErrorMsg();
+    }
+
+  }
+  
+  function init_table() {
+    $sql =<<<EOF
+      INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
+      VALUES (1, 'Paul', 32, 'California', 20000.00 );
+
+      INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
+      VALUES (2, 'Allen', 25, 'Texas', 15000.00 );
+
+      INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
+      VALUES (3, 'Teddy', 23, 'Norway', 20000.00 );
+
+      INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
+      VALUES (4, 'Mark', 25, 'Rich-Mond ', 65000.00 );
+EOF;
+
+    return $this->exec($sql);
+  }
 }
