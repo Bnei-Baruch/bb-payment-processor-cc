@@ -211,6 +211,10 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
   }
 
   function doTransferCheckout(&$params, $component = 'contribute') {
+print "<pre>";
+var_dump($params);
+print "</pre>";
+exit();
 
     $config = CRM_Core_Config::singleton();
 
@@ -281,7 +285,12 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $miObj->setParameter("ErrorUrl", $cancelURL);
     $miObj->setParameter("CancelUrl", $cancelURL);
     $miObj->setParameter("Total", $params["amount"] * 100);
-    $miObj->setParameter("Currency", self::BBPriority_CURRENCY_NIS); // TODO: Support other currencies
+    if ($params["amount"] == 1) {
+      // Maaser
+      $miObj->setParameter("FreeTotal", true);
+    }
+    // PeleCard: Credit and Payments transactions allowed in ILS only!!!
+    $miObj->setParameter("Currency", self::BBPriority_CURRENCY_NIS);
     $miObj->setParameter("MinPayments", 1);
     $miObj->setParameter("MaxPayments", 1); // TODO: Support payments
 
