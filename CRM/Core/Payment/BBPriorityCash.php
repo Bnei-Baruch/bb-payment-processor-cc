@@ -211,11 +211,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
   }
 
   function doTransferCheckout(&$params, $component = 'contribute') {
-print "<pre>";
-var_dump($params);
-print "</pre>";
-exit();
-
     $config = CRM_Core_Config::singleton();
 
     if ($component != 'contribute' && $component != 'event') {
@@ -272,45 +267,46 @@ exit();
       . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
       . '&returnURL=' . base64_url_encode($returnURL);
 
-    $miObj = new PelecardAPI;
-    $miObj->setParameter("user", $this->_paymentProcessor["user_name"]);
-    $miObj->setParameter("password", $this->_paymentProcessor["password"]);
-    $miObj->setParameter("terminal", $this->_paymentProcessor["signature"]);
-    $miObj->setParameter("LogoUrl", $this->_paymentProcessor["url_site"]);
+    $pelecard = new PelecardAPI;
+    $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
+    $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
+    $pelecard->setParameter("terminal", $this->_paymentProcessor["signature"]);
+    $pelecard->setParameter("LogoUrl", $this->_paymentProcessor["url_site"]);
 
-    $miObj->setParameter("UserKey", $params['qfKey']);
+    $pelecard->setParameter("UserKey", $params['qfKey']);
 
     //    $sandBoxUrl = 'https://gateway20.pelecard.biz/sandbox/landingpage?authnum=123';
-    $miObj->setParameter("GoodUrl", $merchantUrl); // ReturnUrl should be used _AFTER_ payment confirmation
-    $miObj->setParameter("ErrorUrl", $cancelURL);
-    $miObj->setParameter("CancelUrl", $cancelURL);
-    $miObj->setParameter("Total", $params["amount"] * 100);
+    $pelecard->setParameter("GoodUrl", $merchantUrl); // ReturnUrl should be used _AFTER_ payment confirmation
+    $pelecard->setParameter("ErrorUrl", $cancelURL);
+    $pelecard->setParameter("CancelUrl", $cancelURL);
+    $pelecard->setParameter("Total", $params["amount"] * 100);
     if ($params["amount"] == 1) {
       // Maaser
-      $miObj->setParameter("FreeTotal", true);
+      $pelecard->setParameter("FreeTotal", true);
     }
-    // PeleCard: Credit and Payments transactions allowed in ILS only!!!
-    $miObj->setParameter("Currency", self::BBPriority_CURRENCY_NIS);
-    $miObj->setParameter("MinPayments", 1);
-    $miObj->setParameter("MaxPayments", 1); // TODO: Support payments
+
+    $pelecard->setParameter("Currency", self::BBPriority_CURRENCY_NIS);
+    $pelecard->setParameter("MinPayments", 1);
+    $pelecard->setParameter("MaxPayments", 1); // TODO: Support payments
 
     global $language;
     $lang = strtoupper($language->language);
     if ($lang == 'HE') {
-      $miObj->setParameter("TopText", 'BB כרטיסי אשראי');
-      $miObj->setParameter("BottomText", '© בני ברוך קבלה לעם');
-      $miObj->setParameter("Language", 'HE');
+      $pelecard->setParameter("TopText", 'BB כרטיסי אשראי');
+      $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
+      $pelecard->setParameter("Language", 'HE');
     } elseif ($lang == 'RU') {
-      $miObj->setParameter("TopText", 'BB Кредитные Карты');
-      $miObj->setParameter("BottomText", '© Бней Барух Каббала лаАм');
-      $miObj->setParameter("Language", 'RU');
+      $pelecard->setParameter("TopText", 'BB Кредитные Карты');
+      $pelecard->setParameter("BottomText", '© Бней Барух Каббала лаАм');
+      $pelecard->setParameter("Language", 'RU');
     } else {
-      $miObj->setParameter("TopText", 'BB Credit Cards');
-      $miObj->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
-      $miObj->setParameter("Language", 'EN');
+      $pelecard->setParameter("TopText", 'BB Credit Cards');
+      $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
+      $pelecard->setParameter("Language", 'EN');
     }
 
-    $result = $miObj->getRedirectUrl();
+    storeParameters($pelecard);
+    $result = $pelecard->getRedirectUrl();
     $error = $result[0];
     if ($error > 0) {
       $message = $result[1];
@@ -326,6 +322,55 @@ exit();
     print $template->fetch('CRM/Core/Payment/Bbprioritycash.tpl');
 
     CRM_Utils_System::civiExit();
+  }
+
+  function storeParameters($params, $pelecard) {
+    $toStore = array();
+    print "<pre>";
+    var_dump($params);
+    print "</pre>";
+    $toStore['uniqueID'] = $params['qfKey'];
+    $toStore['amount'] = $params['amount'];
+    $toStore['currency'] = $params['currencyID'];
+    $toStore['name'] = $params['first_name'] . ' ' . $params['last_name'];
+    $toStore['email'] = getField($params, 'email');
+    $toStore['phone'] = $params['phone'];
+    // TODO: Map number to name
+    $toStore['address'] = getField($params, 'street_address') . ' '
+      . getField($params, 'city') . ' '
+      . getField($params, 'country');
+    $toStore['event'] = $params['item_name'] . ' \n' .$params['item_name'];
+    $toStore['participants'] = $params['additional_participants'] + 1;
+    foreach ($params['eventCustomFields'][114]['fields'] as $key => $val) {
+      if ($val['label'] == 'עמותה') {
+        // TODO: should be name and not number
+        $toStore['org'] = $val['customValue'][1]['data'];
+      } elseif ($val['label'] == 'Priority income') {
+        $toStore['income'] = $val['customValue'][1]['data'];
+      } elseif ($val['label'] == 'contribution') {
+        $toStore['is46'] = $val['customValue'][1]['data'] == '1';
+      }
+    }
+    // TODO: read from ..
+    $toStore['installments'] = 1;
+
+    print "<h1>toStore</h1><pre>";
+    var_dump($params);
+    print "</pre>";
+
+    $pelecard->storeParamsters($toStore);
+    exit();
+  }
+
+  /* Return dashed field (like email-4) from array */
+  function getField($array, $field) {
+    $keys = array_keys($array);
+    $result = preg_grep("^/" . $field . "/", $keys);
+    if (empty($result)) {
+      return null;
+    } else {
+      return $array[$result];
+    }
   }
 
   public function handlePaymentNotification() {
@@ -344,7 +389,8 @@ exit();
     ));
     if (!$ipn->validateResult($this->_paymentProcessor, $input, $ids, $objects, TRUE, $paymentProcessorID)) {
       // CRM_Core_Error::debug_log_message("bbprioritycash Validation failed");
-      echo("bbprioritycash Validation failed"); exit();
+      echo("bbprioritycash Validation failed");
+      exit();
       return FALSE;
     }
 

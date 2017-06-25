@@ -1,4 +1,5 @@
 <?php
+
 class PelecardAPI {
   /******  Array of request data ******/
   var $vars_pay = array();
@@ -63,11 +64,11 @@ class PelecardAPI {
     $result = curl_exec($ch);
     if ($result == '0') {
       $this->vars_pay = [
-        'Error' => array( -1, 'Error')
+        'Error' => array(-1, 'Error')
       ];
     } elseif ($result == '1') {
       $this->vars_pay = [
-        'Identified' => array( 0, 'Identified')
+        'Identified' => array(0, 'Identified')
       ];
     } else {
       $this->stringToArray($result);
@@ -159,27 +160,34 @@ class PelecardAPI {
       echo $db->lastErrorMsg();
     }
 
-    $db->create_table();
-    if(!$ret){
+    if (!$db->create_table() || !$db->init_table()) {
       echo $db->lastErrorMsg();
     }
-    $sql =<<<EOF
+    $sql = <<<EOF
       SELECT * from COMPANY;
 EOF;
 
     $ret = $db->query($sql);
-    while($row = $ret->fetchArray(SQLITE3_ASSOC) ){
-      echo "ID = ". $row['ID'] . "<br/>";
-      echo "NAME = ". $row['NAME'] ."<br/>";
-      echo "ADDRESS = ". $row['ADDRESS'] ."<br/>";
-      echo "SALARY =  ".$row['SALARY'] ."<br/><br/>";
+    if (!$ret) {
+      echo $db->lastErrorMsg();
+    }
+    while ($row = $ret->fetchArray(SQLITE3_ASSOC)) {
+      echo "ID = " . $row['ID'] . "<br/>";
+      echo "NAME = " . $row['NAME'] . "<br/>";
+      echo "ADDRESS = " . $row['ADDRESS'] . "<br/>";
+      echo "SALARY =  " . $row['SALARY'] . "<br/><br/>";
     }
 
     $db->close();
     exit();
     return true;
   }
+
+  function storeParameters() {
+
+  }
 }
+
 
 /******  Base64 Functions  ******/
 function base64_url_encode($input) {
@@ -201,7 +209,7 @@ class InvoiceDb extends SQLite3 {
   }
 
   function create_table() {
-    $sql =<<<EOF
+    $sql = <<<EOF
           CREATE TABLE IF NOT EXISTS company(
           id INT PRIMARY KEY     NOT NULL,
           name           TEXT    NOT NULL,
@@ -210,15 +218,11 @@ class InvoiceDb extends SQLite3 {
           salary         REAL);
 EOF;
 
-    $ret = $this->exec($sql);
-    if(!$ret){
-      echo $db->lastErrorMsg();
-    }
-
+    return $this->exec($sql);
   }
-  
+
   function init_table() {
-    $sql =<<<EOF
+    $sql = <<<EOF
       INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
       VALUES (1, 'Paul', 32, 'California', 20000.00 );
 
