@@ -172,6 +172,9 @@ class PelecardAPI {
     }
 
     $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, event, participants, org, income, is46, installments, success) VALUES ( :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :installments, :success)");
+    if (!$insert) {
+      echo $db->lastErrorMsg();
+    }
 
     $insert->bindParam(':id', $params['id']);
     $insert->bindParam(':name', $params['name']);
@@ -189,11 +192,7 @@ class PelecardAPI {
     $insert->bindParam(':success', $params['success']);
 
     $result = $insert->execute();
-    if ($result) {
-      echo '<h1>Result</h1><pre>';
-      var_dump($result);
-      echo '</pre>';
-    } else {
+    if (!$result) {
       echo $db->lastErrorMsg();
     }
     $db->close();

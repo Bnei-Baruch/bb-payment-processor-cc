@@ -380,7 +380,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $toStore['amount'] = $params['amount'];
     $toStore['currency'] = $params['currencyID'];
     $toStore['email'] = $this->getField($params, 'email');
-    $toStore['phone'] = $params['phone'];
+    $toStore['phone'] = $this->getField($params, 'phone');
     // TODO: Map number to name
     $toStore['address'] = $this->getField($params, 'street_address') . ' '
       . $this->getField($params, 'city') . ' '
@@ -399,6 +399,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     }
     // TODO: read from ..
     $toStore['installments'] = 1;
+    $toStore['success'] = false;
 
     $pelecard->storeParameters($toStore);
     exit();
