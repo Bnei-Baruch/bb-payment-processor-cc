@@ -114,7 +114,6 @@ class PelecardAPI {
 
     $data = $this->getParameter('ResultData');
     $this->stringToArray($data);
-    $UserKey;
 
     $this->vars_pay = [];
     $this->setParameter("ConfirmationKey", $ConfirmationKey);
@@ -129,15 +128,19 @@ class PelecardAPI {
       CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
       return false;
     }
-    // TODO: Store all parameters in DB
+
     $db = new InvoiceDb();
     if (!$db) {
       echo $db->lastErrorMsg();
     }
 
-    $insert = $db->prepare("UPDATE payments (result, success) VALUES (:result, true) WHERE id = " . $UserKey);
-    $insert->bindParam(':result', $data);
+    $insert = $db->prepare("UPDATE payments SET response = :response, success = 1 WHERE id = '" . $UserKey . "'");
+//echo "<pre>"; var_dump($data); echo "</pre>";
     if (!$insert) {
+      echo $db->lastErrorMsg();
+    }
+    $result = $insert->bindParam(':response', $data);
+    if (!$result) {
       echo $db->lastErrorMsg();
     }
 
