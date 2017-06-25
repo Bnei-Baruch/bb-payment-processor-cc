@@ -171,13 +171,8 @@ class PelecardAPI {
       echo $db->lastErrorMsg();
     }
 
-    $insert = $db->prepare("INSERT INTO payments (
-      id, name, amount, currency, email, phone, address, event, 
-      participants, org, income, is46, installments, success
-      ) VALUES (
-      :id, :name, :amount, :currency, :email, :phone, :address, :event, 
-      :participants, :org, :income, :is46, :installments, :success
-      )";
+    $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, event, participants, org, income, is46, installments, success) VALUES ( :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :installments, :success)");
+
     $insert->bindParam(':id', $params['id']);
     $insert->bindParam(':name', $params['name']);
     $insert->bindParam(':amount', $params['amount']);
@@ -216,7 +211,7 @@ class InvoiceDb extends SQLite3 {
           org           CHAR(10)  NOT NULL,
           income        CHAR(20)  NOT NULL,
           is46          BOOLEAN   NOT NULL,
-          instalments   INT       NOT NULL,
+          installments  INT       NOT NULL,
           success       BOOLEAN   NOT NULL
           );
 EOF;

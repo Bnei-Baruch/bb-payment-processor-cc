@@ -379,7 +379,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $toStore['name'] = $params['first_name'] . ' ' . $params['last_name'];
     $toStore['amount'] = $params['amount'];
     $toStore['currency'] = $params['currencyID'];
-    $toStore['email'] = getField($params, 'email');
+    $toStore['email'] = $this->getField($params, 'email');
     $toStore['phone'] = $params['phone'];
     // TODO: Map number to name
     $toStore['address'] = $this->getField($params, 'street_address') . ' '
