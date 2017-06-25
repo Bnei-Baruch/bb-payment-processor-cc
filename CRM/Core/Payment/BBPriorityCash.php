@@ -402,7 +402,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $toStore['success'] = false;
 
     $pelecard->storeParameters($toStore);
-    exit();
   }
 
   /* Return dashed field (like email-4) from array */

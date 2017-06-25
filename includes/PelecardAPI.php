@@ -112,34 +112,9 @@ class PelecardAPI {
       return false;
     }
 
-    $this->stringToArray($this->getParameter('ResultData'));
-
-    $ShvaResult = $this->getParameter('ShvaResult');
-    $VoucherId = $this->getParameter('VoucherId');
-    $TransactionPelecardId = $this->getParameter('TransactionPelecardId');
-    $ShvaFileNumber = $this->getParameter('ShvaFileNumber');
-    $StationNumber = $this->getParameter('StationNumber');
-    $Reciept = $this->getParameter('Reciept');
-    $JParam = $this->getParameter('JParam');
-    $CreditCardNumber = $this->getParameter('CreditCardNumber');
-    $CreditCardExpDate = $this->getParameter('CreditCardExpDate');
-    $CreditCardCompanyClearer = $this->getParameter('CreditCardCompanyClearer');
-    $CreditCardCompanyIssuer = $this->getParameter('CreditCardCompanyIssuer');
-    $CreditType = $this->getParameter('CreditType');
-    $CreditCardAbroadCard = $this->getParameter('CreditCardAbroadCard');
-    $DebitType = $this->getParameter('DebitType');
-    $DebitCode = $this->getParameter('DebitCode');
-    $DebitTotal = $this->getParameter('DebitTotal');
-    $DebitCurrency = $this->getParameter('DebitCurrency');
-    $TotalPayments = $this->getParameter('TotalPayments');
-    $FirstPaymentTotal = $this->getParameter('FirstPaymentTotal');
-    $FixedPaymentTotal = $this->getParameter('FixedPaymentTotal');
-    $CreditCardBrand = $this->getParameter('CreditCardBrand');
-    $CardHebrewName = $this->getParameter('CardHebrewName');
-    $ShvaOutput = $this->getParameter('ShvaOutput');
-    $ApprovedBy = $this->getParameter('ApprovedBy');
-    $TransactionInitTime = $this->getParameter('TransactionInitTime');
-    $TransactionUpdateTime = $this->getParameter('TransactionUpdateTime');
+    $data = $this->getParameter('ResultData');
+    $this->stringToArray($data);
+    $UserKey;
 
     $this->vars_pay = [];
     $this->setParameter("ConfirmationKey", $ConfirmationKey);
@@ -160,8 +135,13 @@ class PelecardAPI {
       echo $db->lastErrorMsg();
     }
 
+    $insert = $db->prepare("UPDATE payments (result, success) VALUES (:result, true) WHERE id = " . $UserKey);
+    $insert->bindParam(':result', $data);
+    if (!$insert) {
+      echo $db->lastErrorMsg();
+    }
+
     $db->close();
-    exit();
     return true;
   }
 
@@ -171,7 +151,7 @@ class PelecardAPI {
       echo $db->lastErrorMsg();
     }
 
-    $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, event, participants, org, income, is46, installments, success) VALUES ( :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :installments, :success)");
+    $insert = $db->prepare("INSERT INTO payments (id, name, amount, currency, email, phone, address, event, participants, org, income, is46, installments, success) VALUES ( :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :installments, :success)");
     if (!$insert) {
       echo $db->lastErrorMsg();
     }
@@ -217,7 +197,8 @@ class InvoiceDb extends SQLite3 {
             income        CHAR(20)  NOT NULL,
             is46          BOOLEAN   NOT NULL,
             installments  INT       NOT NULL,
-            success       BOOLEAN   NOT NULL
+            response      TEXT,
+            success       BOOLEAN   
           );
 EOF;
 
