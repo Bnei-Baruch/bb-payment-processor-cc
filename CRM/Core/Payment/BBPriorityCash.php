@@ -305,7 +305,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       $pelecard->setParameter("Language", 'EN');
     }
 
-    storeParameters($pelecard);
+    $this->storeParameters($params, $pelecard);
     $result = $pelecard->getRedirectUrl();
     $error = $result[0];
     if ($error > 0) {
@@ -373,21 +373,23 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     return ltrim(trim($amount), $pad);
   }
 
-  static function storeParameters($params, $pelecard) {
+  function storeParameters($params, $pelecard) {
     $toStore = array();
+
     print "<pre>";
     var_dump($params);
     print "</pre>";
+
     $toStore['uniqueID'] = $params['qfKey'];
     $toStore['amount'] = $params['amount'];
     $toStore['currency'] = $params['currencyID'];
     $toStore['name'] = $params['first_name'] . ' ' . $params['last_name'];
-    $toStore['email'] = getField($params, 'email');
-    $toStore['phone'] = $params['phone'];
+    $toStore['email'] = $this->getField($params, 'email');
+    $toStore['phone'] = $this->getField($params, 'phone');
     // TODO: Map number to name
-    $toStore['address'] = getField($params, 'street_address') . ' '
-      . getField($params, 'city') . ' '
-      . getField($params, 'country');
+    $toStore['address'] = $this->getField($params, 'street_address') . ' '
+      . $this->getField($params, 'city') . ' '
+      . $this->getField($params, 'country');
     $toStore['event'] = $params['item_name'] . ' \n' .$params['item_name'];
     $toStore['participants'] = $params['additional_participants'] + 1;
     foreach ($params['eventCustomFields'][114]['fields'] as $key => $val) {
@@ -404,21 +406,22 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $toStore['installments'] = 1;
 
     print "<h1>toStore</h1><pre>";
-    var_dump($params);
+    var_dump($toStore);
     print "</pre>";
 
-    $pelecard->storeParamsters($toStore);
+    $pelecard->storeParameters($toStore);
     exit();
   }
 
   /* Return dashed field (like email-4) from array */
-  static function getField($array, $field) {
+  function getField($array, $field) {
     $keys = array_keys($array);
-    $result = preg_grep("^/" . $field . "/", $keys);
+    $pattern = "/^" . $field . "/";
+    $result = preg_grep($pattern, $keys);
     if (empty($result)) {
       return null;
     } else {
-      return $array[$result];
+      return $array[array_values($result)[0]];
     }
   }
 
