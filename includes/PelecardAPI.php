@@ -188,8 +188,7 @@ class PelecardAPI {
     $insert->bindParam(':installments', $params['installments']);
     $insert->bindParam(':success', $params['success']);
 
-    $db->exec($insert);
-
+    $insert->execute();
     $db->close();
   }
 }
@@ -199,20 +198,20 @@ class InvoiceDb extends SQLite3 {
     $this->open("db/test.db", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
     $sql = <<<EOF
           CREATE TABLE IF NOT EXISTS payments (
-          id CHAR(50) PRIMARY KEY     NOT NULL,
-          name          TEXT      NOT NULL,
-          amount        REAL      NOT NULL,
-          currency      CHAR(3)   NOT NULL,
-          email         CHAR(100) NOT NULL,
-          phone         CHAR(30)  NOT NULL,
-          address       CHAR(50)  NOT NULL,
-          event         TEXT      NOT NULL,
-          participants  INT       NOT NULL,
-          org           CHAR(10)  NOT NULL,
-          income        CHAR(20)  NOT NULL,
-          is46          BOOLEAN   NOT NULL,
-          installments  INT       NOT NULL,
-          success       BOOLEAN   NOT NULL
+            id            CHAR(50)  PRIMARY KEY NOT NULL,
+            name          TEXT      NOT NULL,
+            amount        REAL      NOT NULL,
+            currency      CHAR(3)   NOT NULL,
+            email         CHAR(100) NOT NULL,
+            phone         CHAR(30)  NOT NULL,
+            address       CHAR(50)  NOT NULL,
+            event         TEXT      NOT NULL,
+            participants  INT       NOT NULL,
+            org           CHAR(10)  NOT NULL,
+            income        CHAR(20)  NOT NULL,
+            is46          BOOLEAN   NOT NULL,
+            installments  INT       NOT NULL,
+            success       BOOLEAN   NOT NULL
           );
 EOF;
 
