@@ -324,55 +324,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     CRM_Utils_System::civiExit();
   }
 
-  function storeParameters($params, $pelecard) {
-    $toStore = array();
-    print "<pre>";
-    var_dump($params);
-    print "</pre>";
-    $toStore['uniqueID'] = $params['qfKey'];
-    $toStore['amount'] = $params['amount'];
-    $toStore['currency'] = $params['currencyID'];
-    $toStore['name'] = $params['first_name'] . ' ' . $params['last_name'];
-    $toStore['email'] = getField($params, 'email');
-    $toStore['phone'] = $params['phone'];
-    // TODO: Map number to name
-    $toStore['address'] = getField($params, 'street_address') . ' '
-      . getField($params, 'city') . ' '
-      . getField($params, 'country');
-    $toStore['event'] = $params['item_name'] . ' \n' .$params['item_name'];
-    $toStore['participants'] = $params['additional_participants'] + 1;
-    foreach ($params['eventCustomFields'][114]['fields'] as $key => $val) {
-      if ($val['label'] == 'עמותה') {
-        // TODO: should be name and not number
-        $toStore['org'] = $val['customValue'][1]['data'];
-      } elseif ($val['label'] == 'Priority income') {
-        $toStore['income'] = $val['customValue'][1]['data'];
-      } elseif ($val['label'] == 'contribution') {
-        $toStore['is46'] = $val['customValue'][1]['data'] == '1';
-      }
-    }
-    // TODO: read from ..
-    $toStore['installments'] = 1;
-
-    print "<h1>toStore</h1><pre>";
-    var_dump($params);
-    print "</pre>";
-
-    $pelecard->storeParamsters($toStore);
-    exit();
-  }
-
-  /* Return dashed field (like email-4) from array */
-  function getField($array, $field) {
-    $keys = array_keys($array);
-    $result = preg_grep("^/" . $field . "/", $keys);
-    if (empty($result)) {
-      return null;
-    } else {
-      return $array[$result];
-    }
-  }
-
   public function handlePaymentNotification() {
     $input = $ids = $objects = array();
     $ipn = new CRM_Core_Payment_BBPriorityCashIPN();
@@ -421,4 +372,54 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
   static function trimAmount($amount, $pad = '0') {
     return ltrim(trim($amount), $pad);
   }
+
+  static function storeParameters($params, $pelecard) {
+    $toStore = array();
+    print "<pre>";
+    var_dump($params);
+    print "</pre>";
+    $toStore['uniqueID'] = $params['qfKey'];
+    $toStore['amount'] = $params['amount'];
+    $toStore['currency'] = $params['currencyID'];
+    $toStore['name'] = $params['first_name'] . ' ' . $params['last_name'];
+    $toStore['email'] = getField($params, 'email');
+    $toStore['phone'] = $params['phone'];
+    // TODO: Map number to name
+    $toStore['address'] = getField($params, 'street_address') . ' '
+      . getField($params, 'city') . ' '
+      . getField($params, 'country');
+    $toStore['event'] = $params['item_name'] . ' \n' .$params['item_name'];
+    $toStore['participants'] = $params['additional_participants'] + 1;
+    foreach ($params['eventCustomFields'][114]['fields'] as $key => $val) {
+      if ($val['label'] == 'עמותה') {
+        // TODO: should be name and not number
+        $toStore['org'] = $val['customValue'][1]['data'];
+      } elseif ($val['label'] == 'Priority income') {
+        $toStore['income'] = $val['customValue'][1]['data'];
+      } elseif ($val['label'] == 'contribution') {
+        $toStore['is46'] = $val['customValue'][1]['data'] == '1';
+      }
+    }
+    // TODO: read from ..
+    $toStore['installments'] = 1;
+
+    print "<h1>toStore</h1><pre>";
+    var_dump($params);
+    print "</pre>";
+
+    $pelecard->storeParamsters($toStore);
+    exit();
+  }
+
+  /* Return dashed field (like email-4) from array */
+  static function getField($array, $field) {
+    $keys = array_keys($array);
+    $result = preg_grep("^/" . $field . "/", $keys);
+    if (empty($result)) {
+      return null;
+    } else {
+      return $array[$result];
+    }
+  }
+
 }
