@@ -160,34 +160,70 @@ class PelecardAPI {
       echo $db->lastErrorMsg();
     }
 
-    if (!$db->create_table() || !$db->init_table()) {
-      echo $db->lastErrorMsg();
-    }
-    $sql = <<<EOF
-      SELECT * from COMPANY;
-EOF;
-
-    $ret = $db->query($sql);
-    if (!$ret) {
-      echo $db->lastErrorMsg();
-    }
-    while ($row = $ret->fetchArray(SQLITE3_ASSOC)) {
-      echo "ID = " . $row['ID'] . "<br/>";
-      echo "NAME = " . $row['NAME'] . "<br/>";
-      echo "ADDRESS = " . $row['ADDRESS'] . "<br/>";
-      echo "SALARY =  " . $row['SALARY'] . "<br/><br/>";
-    }
-
     $db->close();
     exit();
     return true;
   }
 
-  function storeParameters() {
+  function storeParameters($params) {
+    $db = new InvoiceDb();
+    if (!$db) {
+      echo $db->lastErrorMsg();
+    }
 
+    $insert = $db->prepare("INSERT INTO payments (
+      id, name, amount, currency, email, phone, address, event, 
+      participants, org, income, is46, installments, success
+      ) VALUES (
+      :id, :name, :amount, :currency, :email, :phone, :address, :event, 
+      :participants, :org, :income, :is46, :installments, :success
+      )";
+    $insert->bindParam(':id', $params['id']);
+    $insert->bindParam(':name', $params['name']);
+    $insert->bindParam(':amount', $params['amount']);
+    $insert->bindParam(':currency', $params['currency']);
+    $insert->bindParam(':email', $params['email']);
+    $insert->bindParam(':phone', $params['phone']);
+    $insert->bindParam(':address', $params['address']);
+    $insert->bindParam(':event', $params['event']);
+    $insert->bindParam(':participants', $params['participants']);
+    $insert->bindParam(':org', $params['org']);
+    $insert->bindParam(':income', $params['income']);
+    $insert->bindParam(':is46', $params['is46']);
+    $insert->bindParam(':installments', $params['installments']);
+    $insert->bindParam(':success', $params['success']);
+
+    $db->exec($insert);
+
+    $db->close();
   }
 }
 
+class InvoiceDb extends SQLite3 {
+  function __construct() {
+    $this->open("db/test.db", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
+    $sql = <<<EOF
+          CREATE TABLE IF NOT EXISTS payments (
+          id CHAR(50) PRIMARY KEY     NOT NULL,
+          name          TEXT      NOT NULL,
+          amount        REAL      NOT NULL,
+          currency      CHAR(3)   NOT NULL,
+          email         CHAR(100) NOT NULL,
+          phone         CHAR(30)  NOT NULL,
+          address       CHAR(50)  NOT NULL,
+          event         TEXT      NOT NULL,
+          participants  INT       NOT NULL,
+          org           CHAR(10)  NOT NULL,
+          income        CHAR(20)  NOT NULL,
+          is46          BOOLEAN   NOT NULL,
+          instalments   INT       NOT NULL,
+          success       BOOLEAN   NOT NULL
+          );
+EOF;
+
+    $this->exec($sql);
+  }
+}
 
 /******  Base64 Functions  ******/
 function base64_url_encode($input) {
@@ -201,41 +237,4 @@ function encodeBase64($data) {
 
 function base64_url_decode($input) {
   return base64_decode(strtr($input, '-_', '+/'));
-}
-
-class InvoiceDb extends SQLite3 {
-  function __construct() {
-    $this->open("db/test.db", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
-  }
-
-  function create_table() {
-    $sql = <<<EOF
-          CREATE TABLE IF NOT EXISTS company(
-          id INT PRIMARY KEY     NOT NULL,
-          name           TEXT    NOT NULL,
-          age            INT     NOT NULL,
-          address        CHAR(50),
-          salary         REAL);
-EOF;
-
-    return $this->exec($sql);
-  }
-
-  function init_table() {
-    $sql = <<<EOF
-      INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
-      VALUES (1, 'Paul', 32, 'California', 20000.00 );
-
-      INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
-      VALUES (2, 'Allen', 25, 'Texas', 15000.00 );
-
-      INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
-      VALUES (3, 'Teddy', 23, 'Norway', 20000.00 );
-
-      INSERT INTO COMPANY (ID,NAME,AGE,ADDRESS,SALARY)
-      VALUES (4, 'Mark', 25, 'Rich-Mond ', 65000.00 );
-EOF;
-
-    return $this->exec($sql);
-  }
 }

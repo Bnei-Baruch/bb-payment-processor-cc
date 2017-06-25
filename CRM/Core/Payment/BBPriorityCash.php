@@ -375,17 +375,12 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
 
   function storeParameters($params, $pelecard) {
     $toStore = array();
-
-    print "<pre>";
-    var_dump($params);
-    print "</pre>";
-
-    $toStore['uniqueID'] = $params['qfKey'];
+    $toStore['id'] = $params['qfKey'];
+    $toStore['name'] = $params['first_name'] . ' ' . $params['last_name'];
     $toStore['amount'] = $params['amount'];
     $toStore['currency'] = $params['currencyID'];
-    $toStore['name'] = $params['first_name'] . ' ' . $params['last_name'];
-    $toStore['email'] = $this->getField($params, 'email');
-    $toStore['phone'] = $this->getField($params, 'phone');
+    $toStore['email'] = getField($params, 'email');
+    $toStore['phone'] = $params['phone'];
     // TODO: Map number to name
     $toStore['address'] = $this->getField($params, 'street_address') . ' '
       . $this->getField($params, 'city') . ' '
@@ -404,10 +399,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     }
     // TODO: read from ..
     $toStore['installments'] = 1;
-
-    print "<h1>toStore</h1><pre>";
-    var_dump($toStore);
-    print "</pre>";
 
     $pelecard->storeParameters($toStore);
     exit();
