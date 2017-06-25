@@ -188,7 +188,14 @@ class PelecardAPI {
     $insert->bindParam(':installments', $params['installments']);
     $insert->bindParam(':success', $params['success']);
 
-    $insert->execute();
+    $result = $insert->execute();
+    if ($result) {
+      echo '<h1>Result</h1><pre>';
+      var_dump($result);
+      echo '</pre>';
+    } else {
+      echo $db->lastErrorMsg();
+    }
     $db->close();
   }
 }
