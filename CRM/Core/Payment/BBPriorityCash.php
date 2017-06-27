@@ -381,10 +381,17 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $toStore['currency'] = $params['currencyID'];
     $toStore['email'] = $this->getField($params, 'email');
     $toStore['phone'] = $this->getField($params, 'phone');
-    // TODO: Map number to name
+    // Map country number to name
+    $country_no = $this->getField($params, 'country');
+    $query = "SELECT name FROM civicrm_country WHERE id IN (" . implode(',', $country_no) . ")";
+    $country_name = CRM_Core_DAO::singleValueQuery($query);
+    echo "<pre>";
+    var_dump($country_name);
+    echo "</pre>";
+    exit();
     $toStore['address'] = $this->getField($params, 'street_address') . ' '
       . $this->getField($params, 'city') . ' '
-      . $this->getField($params, 'country');
+      . $country_name;
     $toStore['event'] = $params['item_name'] . ' \n' .$params['item_name'];
     $toStore['participants'] = $params['additional_participants'] + 1;
     $toStore['installments'] = 1;
