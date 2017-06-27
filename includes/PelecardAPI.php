@@ -55,6 +55,7 @@ class PelecardAPI {
   }
 
   function connect($params, $action) {
+    // TODO: Read from settings
     $ch = curl_init('https://gateway20.pelecard.biz/PaymentGW' . $action);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
     curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
@@ -129,21 +130,25 @@ class PelecardAPI {
       return false;
     }
 
+    // Store all parameters in DB
     $db = new InvoiceDb();
     if (!$db) {
       echo $db->lastErrorMsg();
+      return false;
     }
 
-    $insert = $db->prepare("UPDATE payments SET response = :response, success = 1 WHERE id = '" . $UserKey . "'");
-//echo "<pre>"; var_dump($data); echo "</pre>";
+    $insert = $db->prepare("UPDATE payments (response, success) VALUES (:response, 1) WHERE id = :id");
     if (!$insert) {
       echo $db->lastErrorMsg();
+      return false;
     }
-    $result = $insert->bindParam(':response', $data);
+    $insert->bindValue(':id', $UserKey);
+    $insert->bindValue(':response', $data);
+    $result = $insert->execute();
     if (!$result) {
       echo $db->lastErrorMsg();
+      return false;
     }
-
     $db->close();
     return true;
   }

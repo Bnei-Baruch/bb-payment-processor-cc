@@ -399,7 +399,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     }
     // TODO: read from ..
     $toStore['installments'] = 1;
-    $toStore['success'] = false;
+    $toStore['success'] = 0;
 
     $pelecard->storeParameters($toStore);
   }
