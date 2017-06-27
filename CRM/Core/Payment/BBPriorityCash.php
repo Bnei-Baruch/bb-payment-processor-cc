@@ -397,7 +397,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       } elseif ($val['label'] == 'Priority income') {
         $toStore['income'] = $val['customValue'][1]['data'];
       } elseif ($val['label'] == 'contribution') {
-        $toStore['is46'] = $val['customValue'][1]['data'] == '1' ? '1' : '0';
+        $toStore['is46'] = $val['customValue'][1]['data'] == '1' ? 1 : 0;
       } elseif ($val['label'] == 'Number of installments') {
         $toStore['installments'] = $val['customValue'][1]['data'];
       }
