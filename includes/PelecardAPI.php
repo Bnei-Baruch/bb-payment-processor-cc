@@ -137,7 +137,7 @@ class PelecardAPI {
       return false;
     }
 
-    $insert = $db->prepare("UPDATE payments (response, success) VALUES (:response, 1) WHERE id = :id");
+    $insert = $db->prepare("UPDATE payments SET response = :response, success = 1 WHERE id = :id");
     if (!$insert) {
       echo $db->lastErrorMsg();
       return false;
