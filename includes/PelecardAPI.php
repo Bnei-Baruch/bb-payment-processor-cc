@@ -207,6 +207,7 @@ class InvoiceDb extends SQLite3 {
             installments  INT       NOT NULL,
             response      TEXT,
             success       BOOLEAN   
+            reported2prio BOOLEAN   
           );
 EOF;
 
