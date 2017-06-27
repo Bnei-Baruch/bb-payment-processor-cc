@@ -387,18 +387,21 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       . $this->getField($params, 'country');
     $toStore['event'] = $params['item_name'] . ' \n' .$params['item_name'];
     $toStore['participants'] = $params['additional_participants'] + 1;
+    $toStore['installments'] = 1;
+    $toStore['org'] = "תנועת הערבות";
+    $toStore['income'] = "123456789";
+    $toStore['is46'] = 0;
     foreach ($params['eventCustomFields'][114]['fields'] as $key => $val) {
       if ($val['label'] == 'עמותה') {
-        // TODO: should be name and not number
         $toStore['org'] = $val['customValue'][1]['data'];
       } elseif ($val['label'] == 'Priority income') {
         $toStore['income'] = $val['customValue'][1]['data'];
       } elseif ($val['label'] == 'contribution') {
-        $toStore['is46'] = $val['customValue'][1]['data'] == '1';
+        $toStore['is46'] = $val['customValue'][1]['data'] == '1' ? '1' : '0';
+      } elseif ($val['label'] == 'Number of installments') {
+        $toStore['installments'] = $val['customValue'][1]['data'];
       }
     }
-    // TODO: read from ..
-    $toStore['installments'] = 1;
     $toStore['success'] = 0;
 
     $pelecard->storeParameters($toStore);
