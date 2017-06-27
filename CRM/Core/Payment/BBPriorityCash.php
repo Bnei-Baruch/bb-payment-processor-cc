@@ -385,10 +385,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
     $country_no = $this->getField($params, 'country');
     $query = "SELECT name FROM civicrm_country WHERE id = %1";
     $country_name = CRM_Core_DAO::singleValueQuery($query, array(1 => array($country_no, 'Integer')));
-    echo "<pre>";
-    var_dump($country_name);
-    echo "</pre>";
-    exit();
     $toStore['address'] = $this->getField($params, 'street_address') . ' '
       . $this->getField($params, 'city') . ' '
       . $country_name;
