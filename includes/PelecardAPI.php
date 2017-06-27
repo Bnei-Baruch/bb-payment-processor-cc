@@ -143,7 +143,7 @@ class PelecardAPI {
       return false;
     }
     $insert->bindValue(':id', $UserKey);
-    $insert->bindValue(':response', $data);
+    $insert->bindValue(':response', implode(",", $data));
     $result = $insert->execute();
     if (!$result) {
       echo $db->lastErrorMsg();
