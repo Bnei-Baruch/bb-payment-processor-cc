@@ -189,7 +189,7 @@ class PelecardAPI {
 
 class InvoiceDb extends SQLite3 {
   function __construct() {
-    $this->open("db/test.db", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
+    $this->open("db/bb2prio.db", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
     $sql = <<<EOF
           CREATE TABLE IF NOT EXISTS payments (
             id            CHAR(50)  PRIMARY KEY NOT NULL,
@@ -203,11 +203,11 @@ class InvoiceDb extends SQLite3 {
             participants  INT       NOT NULL,
             org           CHAR(50)  NOT NULL,
             income        CHAR(20)  NOT NULL,
-            is46          BOOLEAN   NOT NULL,
+            is46          INTEGER   NOT NULL,
             installments  INT       NOT NULL,
             response      TEXT,
-            success       BOOLEAN   
-            reported2prio BOOLEAN   
+            success       INTEGER DEFAULT 0,   
+            reported2prio INTEGER DEFAULT 0
           );
 EOF;
 
