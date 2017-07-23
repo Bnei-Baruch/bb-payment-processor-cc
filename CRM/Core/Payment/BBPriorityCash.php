@@ -14,7 +14,6 @@ require_once 'BBPriorityCashIPN.php';
  * BBPriorityCash payment processor
  */
 class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
-  CONST BBPriority_CURRENCY_NIS = 1;
   /**
    * mode of operation: live or test
    *
@@ -285,10 +284,22 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       $pelecard->setParameter("FreeTotal", true);
     }
 
-    $pelecard->setParameter("Currency", self::BBPriority_CURRENCY_NIS);
+    if ($params["currencyID"] == "EUR") {
+        $currency = 3;
+    } elseif ($params["currencyID"] == "USD") {
+        $currency = 2;
+    } else { // ILS -- default
+        $currency = 1;
+    }
+    $pelecard->setParameter("Currency", $currency);
     $pelecard->setParameter("MinPayments", 1);
-    $pelecard->setParameter("MaxPayments", 1); // TODO: Support payments
 
+    $pelecard->setParameter("MaxPayments", 1);
+    foreach ($params['eventCustomFields'][114]['fields'] as $key => $val) {
+        if ($val['label'] == 'Number of installments') {
+            $pelecard->setParameter("MaxPayments", $val['customValue'][1]['data']);
+        }
+    }
     global $language;
     $lang = strtoupper($language->language);
     if ($lang == 'HE') {
@@ -390,9 +401,10 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment {
       . $country_name;
     $toStore['event'] = $params['item_name'] . ' \n' .$params['item_name'];
     $toStore['participants'] = $params['additional_participants'] + 1;
+    // Defaults
     $toStore['installments'] = 1;
     $toStore['org'] = "תנועת הערבות";
-    $toStore['income'] = "123456789";
+    $toStore['income'] = "Undefined";
     $toStore['is46'] = 0;
     foreach ($params['eventCustomFields'][114]['fields'] as $key => $val) {
       if ($val['label'] == 'עמותה') {
