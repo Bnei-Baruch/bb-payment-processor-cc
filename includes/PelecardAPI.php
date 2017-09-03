@@ -193,6 +193,7 @@ class PelecardAPI
         $insert->bindParam(':is46', $params['is46']);
         $insert->bindParam(':installments', $params['installments']);
         $insert->bindParam(':success', $params['success']);
+        $insert->bindParam(':created_at', (new DateTime())->format('y-m-d H:i'));
 
         $result = $insert->execute();
         if (!$result) {

@@ -303,7 +303,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
         }
 
         if ($params["currencyID"] == "EUR") {
-            $currency = 978;
+            $currency = 3;
         } elseif ($params["currencyID"] == "USD") {
             $currency = 2;
         } else { // ILS -- default
@@ -409,7 +409,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
     {
         $toStore = array();
         $toStore['id'] = $params['qfKey'];
-        $toStore['name'] = $params['display_name'] || $params['first_name'] . ' ' . $params['last_name'];
+        $toStore['name'] = $params['display_name'] ? $params['display_name'] : $params['first_name'] . ' ' . $params['last_name'];
         $toStore['amount'] = $params['amount'];
         $toStore['currency'] = $params['currencyID'];
         $toStore['email'] = $this->getField($params, 'email');
