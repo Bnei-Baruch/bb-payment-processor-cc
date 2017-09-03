@@ -107,7 +107,11 @@ class PelecardAPI
         $amount = $data['amount'];
         $cardnum = $data['CreditCardNumber'];
         $cardexp = $data['CreditCardExpDate'];
-        $firstpay = $data['FirstPaymentTotal'];
+        if ($data['TotalPayments'] == 1) {
+            $firstpay = $amount;
+        } else {
+            $firstpay = $data['FirstPaymentTotal'];
+        }
 
         $this->vars_pay = [];
         $this->setParameter("user", $processor["user_name"]);
