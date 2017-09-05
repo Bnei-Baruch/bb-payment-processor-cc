@@ -181,13 +181,8 @@ class PelecardAPI
             echo $db->lastErrorMsg();
         }
 
-        $insert = $db->prepare("INSERT INTO payments (
-                id, name, amount, currency, email, phone, address, event, participants, org, income, is46, installments, success,
-                response, cardtype, cardnum, cardexp, firstpay
-                ) VALUES ( 
-                :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :installments, :success,
-                '', '', '', '', ''
-                )");
+        $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, event, participants, org, income, is46, installments, success) VALUES ( 
+                :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :installments, :success)");
         if (!$insert) {
             echo $db->lastErrorMsg();
         }
@@ -235,6 +230,7 @@ class InvoiceDb extends SQLite3
             org           CHAR(50)  NOT NULL,
             income        CHAR(20)  NOT NULL,
             is46          INTEGER   NOT NULL,
+            cardtype      INTEGER,
             cardnum       CHAR(16)  DEFAULT '',
             cardexp       CHAR(5)   DEFAULT '',
             firstpay      REAL      DEFAULT '',
