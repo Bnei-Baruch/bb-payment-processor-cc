@@ -237,7 +237,7 @@ class InvoiceDb extends SQLite3
             cardnum       CHAR(16)  DEFAULT '',
             cardexp       CHAR(5)   DEFAULT '',
             firstpay      REAL      DEFAULT '',
-            installments  INT       NOT NULL,
+            installments  INT,
             response      TEXT,
             created_at    TEXT,
             success       INTEGER   DEFAULT 0,   
