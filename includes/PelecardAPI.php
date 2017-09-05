@@ -127,7 +127,8 @@ class PelecardAPI
         $cardtype = $data['CreditCardCompanyClearer'] . '';
         $cardnum = $data['CreditCardNumber'] . '';
         $cardexp = $data['CreditCardExpDate'] . '';
-        if ($data['TotalPayments'] == 1) {
+        $installments = $data['TotalPayments'];
+        if ($installments == 1) {
             $firstpay = $amount;
         } else {
             $firstpay = $data['FirstPaymentTotal'];
@@ -154,7 +155,9 @@ class PelecardAPI
             return false;
         }
 
-        $insert = $db->prepare("UPDATE payments SET response = :response, cardtype = :cardtype, cardnum = :cardnum, cardexp = :cardexp, firstpay = :firstpay, success = 1 WHERE id = :id");
+        $insert = $db->prepare("UPDATE payments SET response = :response, 
+          cardtype = :cardtype, cardnum = :cardnum, cardexp = :cardexp, firstpay = :firstpay, 
+          installments: = :installments, success = 1 WHERE id = :id");
         if (!$insert) {
             echo $db->lastErrorMsg();
             return false;
@@ -165,6 +168,7 @@ class PelecardAPI
         $insert->bindValue(':cardexp', $cardexp);
         $insert->bindValue(':firstpay', $firstpay);
         $insert->bindValue(':response', implode(",", $data));
+        $insert->bindParam(':installments', $installments);
         $result = $insert->execute();
         if (!$result) {
             echo $db->lastErrorMsg();
@@ -181,8 +185,8 @@ class PelecardAPI
             echo $db->lastErrorMsg();
         }
 
-        $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, event, participants, org, income, is46, installments, success) VALUES ( 
-                :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :installments, :success)");
+        $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, event, participants, org, income, is46, success) VALUES ( 
+                :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :success)");
         if (!$insert) {
             echo $db->lastErrorMsg();
         }
@@ -199,7 +203,6 @@ class PelecardAPI
         $insert->bindParam(':org', $params['org']);
         $insert->bindParam(':income', $params['income']);
         $insert->bindParam(':is46', $params['is46']);
-        $insert->bindParam(':installments', $params['installments']);
         $insert->bindParam(':success', $params['success']);
         $insert->bindParam(':created_at', (new DateTime())->format('y-m-d H:i'));
 
