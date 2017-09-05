@@ -105,14 +105,6 @@ class PelecardAPI
         $ConfirmationKey = $data['ConfirmationKey'] . '';
         $UserKey = $data['UserKey'] . '';
         $amount = $data['amount'] . '';
-        $cardtype = $data['CreditCardCompanyClearer'] . '';
-        $cardnum = $data['CreditCardNumber'] . '';
-        $cardexp = $data['CreditCardExpDate'] . '';
-        if ($data['TotalPayments'] == 1) {
-            $firstpay = $amount;
-        } else {
-            $firstpay = $data['FirstPaymentTotal'];
-        }
 
         $this->vars_pay = [];
         $this->setParameter("user", $processor["user_name"]);
@@ -131,6 +123,15 @@ class PelecardAPI
 
         $data = $this->getParameter('ResultData');
         $this->stringToArray($data);
+
+        $cardtype = $data['CreditCardCompanyClearer'] . '';
+        $cardnum = $data['CreditCardNumber'] . '';
+        $cardexp = $data['CreditCardExpDate'] . '';
+        if ($data['TotalPayments'] == 1) {
+            $firstpay = $amount;
+        } else {
+            $firstpay = $data['FirstPaymentTotal'];
+        }
 
         $this->vars_pay = [];
         $this->setParameter("ConfirmationKey", $ConfirmationKey);
@@ -180,7 +181,13 @@ class PelecardAPI
             echo $db->lastErrorMsg();
         }
 
-        $insert = $db->prepare("INSERT INTO payments (id, name, amount, currency, email, phone, address, event, participants, org, income, is46, installments, success) VALUES ( :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :installments, :success)");
+        $insert = $db->prepare("INSERT INTO payments (
+                id, name, amount, currency, email, phone, address, event, participants, org, income, is46, installments, success,
+                response, cardtype, cardnum, cardexp, firstpay
+                ) VALUES ( 
+                :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :installments, :success,
+                nil, nil, nil, nil
+                )");
         if (!$insert) {
             echo $db->lastErrorMsg();
         }
