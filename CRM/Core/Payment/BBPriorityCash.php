@@ -294,7 +294,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
 
         //    $sandBoxUrl = 'https://gateway20.pelecard.biz/sandbox/landingpage?authnum=123';
         $pelecard->setParameter("GoodUrl", $merchantUrl); // ReturnUrl should be used _AFTER_ payment confirmation
-        $pelecard->setParameter("ErrorUrl", $cancelURL);
+        $pelecard->setParameter("ErrorUrl", $merchantUrl);
         $pelecard->setParameter("CancelUrl", $cancelURL);
         $pelecard->setParameter("Total", $params["amount"] * 100);
         if ($params["amount"] == 1) {

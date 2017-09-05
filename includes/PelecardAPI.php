@@ -102,6 +102,11 @@ class PelecardAPI
     {
         $PelecardTransactionId = $data['PelecardTransactionId'] . '';
         $PelecardStatusCode = $data['PelecardStatusCode'] . '';
+        if ($PelecardStatusCode > 0) {
+            CRM_Core_Error::debug_log_message("Error: " . $PelecardStatusCode);
+            return false;
+        }
+
         $ConfirmationKey = $data['ConfirmationKey'] . '';
         $UserKey = $data['UserKey'] . '';
         $amount = $data['amount'] . '';
