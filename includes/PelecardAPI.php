@@ -186,7 +186,7 @@ class PelecardAPI
                 response, cardtype, cardnum, cardexp, firstpay
                 ) VALUES ( 
                 :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :installments, :success,
-                nil, nil, nil, nil
+                '', '', '', '', ''
                 )");
         if (!$insert) {
             echo $db->lastErrorMsg();
