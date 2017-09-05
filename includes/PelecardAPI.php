@@ -100,13 +100,14 @@ class PelecardAPI
     /****** Validate Response ******/
     function validateResponse($processor, $data)
     {
-        $PelecardTransactionId = $data['PelecardTransactionId'];
-        $PelecardStatusCode = $data['PelecardStatusCode'];
-        $ConfirmationKey = $data['ConfirmationKey'];
-        $UserKey = $data['UserKey'];
-        $amount = $data['amount'];
-        $cardnum = $data['CreditCardNumber'];
-        $cardexp = $data['CreditCardExpDate'];
+        $PelecardTransactionId = $data['PelecardTransactionId'] . '';
+        $PelecardStatusCode = $data['PelecardStatusCode'] . '';
+        $ConfirmationKey = $data['ConfirmationKey'] . '';
+        $UserKey = $data['UserKey'] . '';
+        $amount = $data['amount'] . '';
+        $cardtype = $data['CreditCardCompanyClearer'] . '';
+        $cardnum = $data['CreditCardNumber'] . '';
+        $cardexp = $data['CreditCardExpDate'] . '';
         if ($data['TotalPayments'] == 1) {
             $firstpay = $amount;
         } else {
@@ -152,12 +153,13 @@ class PelecardAPI
             return false;
         }
 
-        $insert = $db->prepare("UPDATE payments SET response = :response, cardnum = :cardnum, cardexp = :cardexp, firstpay = :firstpay, success = 1 WHERE id = :id");
+        $insert = $db->prepare("UPDATE payments SET response = :response, cardtype = :cardtype, cardnum = :cardnum, cardexp = :cardexp, firstpay = :firstpay, success = 1 WHERE id = :id");
         if (!$insert) {
             echo $db->lastErrorMsg();
             return false;
         }
         $insert->bindValue(':id', $UserKey);
+        $insert->bindValue(':cardtype', $cardtype);
         $insert->bindValue(':cardnum', $cardnum);
         $insert->bindValue(':cardexp', $cardexp);
         $insert->bindValue(':firstpay', $firstpay);
