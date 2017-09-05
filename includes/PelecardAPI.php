@@ -98,12 +98,13 @@ class PelecardAPI
     }
 
     /****** Validate Response ******/
-    function validateResponse($processor, $data)
+    function validateResponse($processor, $data, $errors)
     {
         $PelecardTransactionId = $data['PelecardTransactionId'] . '';
         $PelecardStatusCode = $data['PelecardStatusCode'] . '';
         if ($PelecardStatusCode > 0) {
             CRM_Core_Error::debug_log_message("Error: " . $PelecardStatusCode);
+            echo "<h1>Error: " . $errors[$PelecardStatusCode] . "</h1>";
             return false;
         }
 
