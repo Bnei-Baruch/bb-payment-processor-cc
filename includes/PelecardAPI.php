@@ -157,7 +157,7 @@ class PelecardAPI
 
         $insert = $db->prepare("UPDATE payments SET response = :response, 
           cardtype = :cardtype, cardnum = :cardnum, cardexp = :cardexp, firstpay = :firstpay, 
-          installments = :installments, success = 1 WHERE id = :id");
+          installments = :installments, created_at = :created_at, success = 1 WHERE id = :id");
         if (!$insert) {
             echo $db->lastErrorMsg();
             return false;
@@ -169,6 +169,7 @@ class PelecardAPI
         $insert->bindValue(':firstpay', $firstpay);
         $insert->bindValue(':response', implode(",", $data));
         $insert->bindParam(':installments', $installments);
+        $insert->bindParam(':created_at', (new DateTime())->format('y-m-d H:i'));
         $result = $insert->execute();
         if (!$result) {
             echo $db->lastErrorMsg();
@@ -185,8 +186,8 @@ class PelecardAPI
             echo $db->lastErrorMsg();
         }
 
-        $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, event, participants, org, income, is46, success, :created_at) VALUES ( 
-                                                :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :success, :created_at)");
+        $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, event, participants, org, income, is46, success) VALUES ( 
+                                                :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :success)");
         if (!$insert) {
             echo $db->lastErrorMsg();
         }
@@ -204,7 +205,6 @@ class PelecardAPI
         $insert->bindParam(':income', $params['income']);
         $insert->bindParam(':is46', $params['is46']);
         $insert->bindParam(':success', $params['success']);
-        $insert->bindParam(':created_at', (new DateTime())->format('y-m-d H:i'));
 
         $result = $insert->execute();
         if (!$result) {
@@ -237,7 +237,7 @@ class InvoiceDb extends SQLite3
             cardnum       CHAR(16)  DEFAULT '',
             cardexp       CHAR(5)   DEFAULT '',
             firstpay      REAL      DEFAULT '',
-            installments  INT,
+            installments  INTEGER,
             response      TEXT,
             created_at    TEXT,
             success       INTEGER   DEFAULT 0,   
