@@ -303,7 +303,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
         }
 
         if ($params["currencyID"] == "EUR") {
-            $currency = 3;
+            $currency = 978;
         } elseif ($params["currencyID"] == "USD") {
             $currency = 2;
         } else { // ILS -- default
