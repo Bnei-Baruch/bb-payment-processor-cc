@@ -234,6 +234,8 @@ class InvoiceDb extends SQLite3
             email         CHAR(100) NOT NULL,
             phone         CHAR(30)  NOT NULL,
             address       TEXT      NOT NULL,
+            city          CHAR(22),
+            country       CHAR(12),
             event         TEXT      NOT NULL,
             participants  INT       NOT NULL,
             org           CHAR(50)  NOT NULL,
