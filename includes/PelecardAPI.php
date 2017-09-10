@@ -192,8 +192,8 @@ class PelecardAPI
             echo $db->lastErrorMsg();
         }
 
-        $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, event, participants, org, income, is46, success) VALUES ( 
-                                                :id, :name, :amount, :currency, :email, :phone, :address, :event, :participants, :org, :income, :is46, :success)");
+        $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, city, country, event, participants, org, income, is46, success) VALUES ( 
+                                                :id, :name, :amount, :currency, :email, :phone, :address, :city, :country, :event, :participants, :org, :income, :is46, :success)");
         if (!$insert) {
             echo $db->lastErrorMsg();
         }
@@ -205,6 +205,8 @@ class PelecardAPI
         $insert->bindParam(':email', $params['email']);
         $insert->bindParam(':phone', $params['phone']);
         $insert->bindParam(':address', $params['address']);
+        $insert->bindParam(':city', $params['city']);
+        $insert->bindParam(':country', $params['country']);
         $insert->bindParam(':event', $params['event']);
         $insert->bindParam(':participants', $params['participants']);
         $insert->bindParam(':org', $params['org']);
