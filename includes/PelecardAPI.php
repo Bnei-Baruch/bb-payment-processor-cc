@@ -33,7 +33,7 @@ class PelecardAPI
         $this->setParameter("TelField", 'hide');
         $this->setParameter("FeedbackDataTransferMethod", 'POST');
         $this->setParameter("FirstPayment", 'auto');
-        $this->setParameter("ShopNo", 1000); // TODO: What should be shop number?
+        $this->setParameter("ShopNo", 1000);
         $this->setParameter("SetFocus", 'CC');
         $this->setParameter("HiddenPelecardLogo", true);
         $cards = [
@@ -60,7 +60,6 @@ class PelecardAPI
 
     function connect($params, $action)
     {
-        // TODO: Read from settings
         $ch = curl_init('https://gateway20.pelecard.biz/PaymentGW' . $action);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
