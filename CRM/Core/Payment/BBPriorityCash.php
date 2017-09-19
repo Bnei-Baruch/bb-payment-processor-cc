@@ -222,6 +222,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
     {
         /* DEBUG
             echo "<pre>";
+            var_dump($this->_paymentProcessor);
             var_dump($params);
             echo "</pre>";
             exit();
@@ -432,6 +433,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
         $toStore['org'] = "תנועת הערבות";
         $toStore['income'] = "Undefined";
         $toStore['is46'] = 0;
+        $is46 = false;
         foreach ($params['eventCustomFields'][114]['fields'] as $key => $val) {
             if ($val['label'] == 'עמותה') {
                 $toStore['org'] = $val['customValue'][1]['data'];
@@ -439,9 +441,14 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
                 $toStore['income'] = $val['customValue'][1]['data'];
             } elseif ($val['label'] == 'contribution') {
                 $toStore['is46'] = $val['customValue'][1]['data'] == '1' ? 1 : 0;
+                $is46 = true;
             } elseif ($val['label'] == 'Number of installments') {
                 $toStore['installments'] = $val['customValue'][1]['data'];
             }
+        }
+        if ($is46 == false) {
+            /* If 46 was not declared as custom field then use contributionID */
+            $toStore['is46'] = $params['contributionID'] ? 1 : 0;
         }
         $toStore['success'] = 0;
 
