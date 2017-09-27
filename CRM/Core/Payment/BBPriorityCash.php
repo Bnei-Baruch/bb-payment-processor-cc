@@ -419,8 +419,10 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
         $toStore['city'] = $this->getField($params, 'city');
         // Map country number to name
         $country_no = $this->getField($params, 'country');
-        $query = "SELECT name FROM civicrm_country WHERE id = %1";
-        $toStore['country'] = CRM_Core_DAO::singleValueQuery($query, array(1 => array($country_no, 'Integer')));
+	if ($country_no != '') {
+            $query = "SELECT name FROM civicrm_country WHERE id = %1";
+            $toStore['country'] = CRM_Core_DAO::singleValueQuery($query, array(1 => array($country_no, 'Integer')));
+	}
         $event_name = $params['item_name'];
         $item_description = $this->getField($params, 'item_description');
         if ($item_description) {
@@ -466,7 +468,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
         $pattern = "/^" . $field . "/";
         $result = preg_grep($pattern, $keys);
         if (empty($result)) {
-            return null;
+            return '';
         } else {
             return $array[array_values($result)[0]];
         }
