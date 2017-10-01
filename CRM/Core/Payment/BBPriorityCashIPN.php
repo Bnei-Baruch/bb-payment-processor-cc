@@ -263,7 +263,7 @@ class CRM_Core_Payment_BBPriorityCashIPN extends CRM_Core_Payment_BaseIPN {
 
     $contribution = &$objects['contribution'];
     $input['amount'] = $contribution->total_amount;
-    $valid = $this->_bbpAPI->validateResponse($paymentProcessor, $input, $this->errors);
+    $valid = $this->_bbpAPI->validateResponse($paymentProcessor, $input, $contribution, $this->errors);
 
     if (!$valid) {
       CRM_Core_Error::debug_log_message("Pelecard Response is invalid");

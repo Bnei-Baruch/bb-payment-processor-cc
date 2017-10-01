@@ -373,7 +373,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
             // CRM_Core_Error::debug_log_message("bbprioritycash Validation failed");
             echo("bbprioritycash Validation failed");
             exit();
-            return FALSE;
         }
 
         if ($ipn->single($input, $ids, $objects, FALSE, FALSE)) {
@@ -390,7 +389,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
             CRM_Core_Error::debug_log_message("VALIDATION FAILED");
             echo("VALIDATION FAILED");
             exit();
-            return false;
         }
     }
 
