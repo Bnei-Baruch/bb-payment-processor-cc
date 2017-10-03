@@ -99,7 +99,7 @@ class PelecardAPI
     /****** Validate Response ******/
     function validateResponse($processor, $data, $contribution, $errors)
     {
-        $id = $contribution->id;
+        $cid = $contribution->id;
 
         $PelecardTransactionId = $data['PelecardTransactionId'] . '';
         $PelecardStatusCode = $data['PelecardStatusCode'] . '';
@@ -162,16 +162,16 @@ class PelecardAPI
             return false;
         }
 
-        $insert = $db->prepare("UPDATE payments SET civiid = :cvid, response = :response, 
+        $insert = $db->prepare("UPDATE payments SET trxn_id = :trxn_id, cid = :cid, response = :response, 
           cardtype = :cardtype, cardnum = :cardnum, cardexp = :cardexp, firstpay = :firstpay, 
-          installments = :installments, created_at = :created_at, success = 1 WHERE id = :id");
+          installments = :installments, created_at = :created_at WHERE id = :id");
         if (!$insert) {
             echo $db->lastErrorMsg();
             return false;
         }
         $insert->bindValue(':id', $UserKey);
-        $insert->bindValue(':civiid', $id);
-        $insert->bindValue(':cardtype', $cardtype);
+        $insert->bindValue(':cid', $cid);
+        $insert->bindValue(':trxn_id', $PelecardTransactionId);
         $insert->bindValue(':cardnum', $cardnum);
         $insert->bindValue(':cardexp', $cardexp);
         $insert->bindValue(':firstpay', $firstpay);

@@ -376,7 +376,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
         }
 
         if ($ipn->single($input, $ids, $objects, FALSE, FALSE)) {
-            CRM_Core_Error::debug_log_message("VALIDATION PASSED");
             $returnURL = base64_url_decode($input['returnURL']);
 
             // Print the tpl to redirect to success
