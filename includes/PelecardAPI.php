@@ -99,11 +99,11 @@ class PelecardAPI
     }
 
     /****** Validate Response ******/
-    function validateResponse($processor, $data, &$contribution, $errors)
+    function validateResponse($processor, $data, $contribution, $errors)
     {
         $cid = $contribution->id;
 
-        $contribution->trxn_id = $PelecardTransactionId = $data['PelecardTransactionId'] . '';
+        $PelecardTransactionId = $data['PelecardTransactionId'] . '';
         $PelecardStatusCode = $data['PelecardStatusCode'] . '';
         if ($PelecardStatusCode > 0) {
             CRM_Core_Error::debug_log_message("Error: " . $PelecardStatusCode);
@@ -171,7 +171,7 @@ class PelecardAPI
         CRM_Core_DAO::executeQuery(
             'INSERT INTO civicrm_bb_payment_responses(trxn_id, cid, cardtype, cardnum, cardexp, firstpay, installments, response, created_at) 
                    VALUES (%1, %2, %3, %4, %5, %6, %7, %8, NOW())', $query_params);
-        return true;
+        return $PelecardTransactionId;
     }
 }
 
