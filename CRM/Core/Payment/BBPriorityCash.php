@@ -335,7 +335,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
             $pelecard->setParameter("Language", 'EN');
         }
 
-        $this->storeParameters($params, $pelecard);
         $result = $pelecard->getRedirectUrl();
         $error = $result[0];
         if ($error > 0) {
@@ -401,57 +400,6 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
     static function trimAmount($amount, $pad = '0')
     {
         return ltrim(trim($amount), $pad);
-    }
-
-    function storeParameters($params, $pelecard)
-    {
-        $toStore = array();
-        $toStore['id'] = $params['qfKey'];
-        $toStore['name'] = $params['display_name'] ? $params['display_name'] : $params['first_name'] . ' ' . $params['last_name'];
-        $toStore['amount'] = $params['amount'];
-        $toStore['currency'] = $params['currencyID'];
-        $toStore['email'] = $this->getField($params, 'email');
-        $toStore['phone'] = $this->getField($params, 'phone');
-        $toStore['address'] = $this->getField($params, 'street_address');
-        $toStore['city'] = $this->getField($params, 'city');
-        // Map country number to name
-        $country_no = $this->getField($params, 'country');
-	if ($country_no != '') {
-            $query = "SELECT name FROM civicrm_country WHERE id = %1";
-            $toStore['country'] = CRM_Core_DAO::singleValueQuery($query, array(1 => array($country_no, 'Integer')));
-	}
-        $event_name = $params['item_name'];
-        $item_description = $this->getField($params, 'item_description');
-        if ($item_description) {
-            $event_name .= '\n' . $item_description;
-        }
-        $toStore['event'] = $event_name;
-        $toStore['participants'] = $params['additional_participants'] + 1;
-        // Defaults
-        $toStore['installments'] = 1;
-        $toStore['org'] = "תנועת הערבות";
-        $toStore['income'] = "Undefined";
-        $toStore['is46'] = 0;
-        $is46 = false;
-        foreach ($params['eventCustomFields'][114]['fields'] as $key => $val) {
-            if ($val['label'] == 'עמותה') {
-                $toStore['org'] = $val['customValue'][1]['data'];
-            } elseif ($val['label'] == 'Priority income') {
-                $toStore['income'] = $val['customValue'][1]['data'];
-            } elseif ($val['label'] == 'contribution') {
-                $toStore['is46'] = $val['customValue'][1]['data'] == '1' ? 1 : 0;
-                $is46 = true;
-            } elseif ($val['label'] == 'Number of installments') {
-                $toStore['installments'] = $val['customValue'][1]['data'];
-            }
-        }
-        if ($is46 == false) {
-            /* If 46 was not declared as custom field then use contributionID */
-            $toStore['is46'] = $params['contributionID'] ? 1 : 0;
-        }
-        $toStore['success'] = 0;
-
-        $pelecard->storeParameters($toStore);
     }
 
     /* Return dashed field (like email-4) from array */

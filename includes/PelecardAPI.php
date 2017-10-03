@@ -21,6 +21,22 @@ class PelecardAPI
         }
     }
 
+    /******  Convert Hash to JSON ******/
+    function arrayToJson()
+    {
+        return json_encode($this->vars_pay); //(PHP 5 >= 5.2.0)
+    }
+
+    /******  Convert String to Hash ******/
+    function stringToArray($data)
+    {
+        if (is_array($data)) {
+            $this->vars_pay = $data;
+        } else {
+            $this->vars_pay = json_decode($data, true); //(PHP 5 >= 5.2.0)
+        }
+    }
+
     /****** Request URL from PeleCard ******/
     function getRedirectUrl()
     {
@@ -55,6 +71,8 @@ class PelecardAPI
             } else {
                 return array(0, $this->getParameter('URL'));
             }
+        } else {
+            return array('000', 'Unknown error: ' . $error);
         }
     }
 
@@ -77,22 +95,6 @@ class PelecardAPI
             ];
         } else {
             $this->stringToArray($result);
-        }
-    }
-
-    /******  Convert Hash to JSON ******/
-    function arrayToJson()
-    {
-        return json_encode($this->vars_pay); //(PHP 5 >= 5.2.0)
-    }
-
-    /******  Convert String to Hash ******/
-    function stringToArray($data)
-    {
-        if (is_array($data)) {
-            $this->vars_pay = $data;
-        } else {
-            $this->vars_pay = json_decode($data, true); //(PHP 5 >= 5.2.0)
         }
     }
 
@@ -156,109 +158,20 @@ class PelecardAPI
         }
 
         // Store all parameters in DB
-        $db = new InvoiceDb();
-        if (!$db) {
-            echo $db->lastErrorMsg();
-            return false;
-        }
-
-        $insert = $db->prepare("UPDATE payments SET trxn_id = :trxn_id, cid = :cid, response = :response, 
-          cardtype = :cardtype, cardnum = :cardnum, cardexp = :cardexp, firstpay = :firstpay, 
-          installments = :installments, created_at = :created_at WHERE id = :id");
-        if (!$insert) {
-            echo $db->lastErrorMsg();
-            return false;
-        }
-        $insert->bindValue(':id', $UserKey);
-        $insert->bindValue(':cid', $cid);
-        $insert->bindValue(':trxn_id', $PelecardTransactionId);
-        $insert->bindValue(':cardnum', $cardnum);
-        $insert->bindValue(':cardexp', $cardexp);
-        $insert->bindValue(':firstpay', $firstpay);
-        $insert->bindValue(':response', implode(",", $data));
-        $insert->bindParam(':installments', $installments);
-        $insert->bindParam(':created_at', (new DateTime())->format('y-m-d H:i'));
-        $result = $insert->execute();
-        if (!$result) {
-            echo $db->lastErrorMsg();
-            return false;
-        }
-        $db->close();
+        $query_params = array(
+            1 => array($PelecardTransactionId),
+            2 => array($cid),
+            3 => array($cardtype),
+            4 => array($cardnum),
+            5 => array($cardexp),
+            6 => array($firstpay),
+            7 => array($installments),
+            8 => array(implode(",", $data)),
+        );
+        CRM_Core_DAO::executeQuery(
+            'INSERT INTO civicrm_bb_payment_responses(trxn_id, cid, cardtype, cardnum, cardexp, firstpay, installments, response, created_at) 
+                   VALUES (%1, %2, %3, %4, %5, %6, %7, %8, NOW())', $query_params);
         return true;
-    }
-
-    function storeParameters($params)
-    {
-        $db = new InvoiceDb();
-        if (!$db) {
-            echo $db->lastErrorMsg();
-        }
-
-        $insert = $db->prepare("INSERT INTO payments ( id, name, amount, currency, email, phone, address, city, country, event, participants, org, income, is46, success) VALUES ( 
-                                                :id, :name, :amount, :currency, :email, :phone, :address, :city, :country, :event, :participants, :org, :income, :is46, :success)");
-        if (!$insert) {
-            echo $db->lastErrorMsg();
-        }
-
-        $insert->bindParam(':id', $params['id']);
-        $insert->bindParam(':name', $params['name']);
-        $insert->bindParam(':amount', $params['amount']);
-        $insert->bindParam(':currency', $params['currency']);
-        $insert->bindParam(':email', $params['email']);
-        $insert->bindParam(':phone', $params['phone']);
-        $insert->bindParam(':address', $params['address']);
-        $insert->bindParam(':city', $params['city']);
-        $insert->bindParam(':country', $params['country']);
-        $insert->bindParam(':event', $params['event']);
-        $insert->bindParam(':participants', $params['participants']);
-        $insert->bindParam(':org', $params['org']);
-        $insert->bindParam(':income', $params['income']);
-        $insert->bindParam(':is46', $params['is46']);
-        $insert->bindParam(':success', $params['success']);
-
-        $result = $insert->execute();
-        if (!$result) {
-            echo $db->lastErrorMsg();
-        }
-        $db->close();
-    }
-}
-
-class InvoiceDb extends SQLite3
-{
-    function __construct()
-    {
-        $this->open("db/bb2prio.db", SQLITE3_OPEN_READWRITE | SQLITE3_OPEN_CREATE);
-        $sql = <<<EOF
-          CREATE TABLE IF NOT EXISTS payments (
-            id            CHAR(50)  PRIMARY KEY NOT NULL,
-            civiid        CHAR(50)  DEFAULT '',
-            name          TEXT      NOT NULL,
-            amount        REAL      NOT NULL,
-            currency      CHAR(3)   NOT NULL,
-            email         CHAR(100) NOT NULL,
-            phone         CHAR(30)  NOT NULL,
-            address       TEXT      NOT NULL,
-            city          CHAR(22),
-            country       CHAR(12),
-            event         TEXT      NOT NULL,
-            participants  INT       NOT NULL,
-            org           CHAR(50)  NOT NULL,
-            income        CHAR(20)  NOT NULL,
-            is46          INTEGER   NOT NULL,
-            cardtype      INTEGER,
-            cardnum       CHAR(16)  DEFAULT '',
-            cardexp       CHAR(5)   DEFAULT '',
-            firstpay      REAL      DEFAULT '',
-            installments  INTEGER,
-            response      TEXT,
-            created_at    TEXT,
-            success       INTEGER   DEFAULT 0,   
-            reported2prio INTEGER   DEFAULT 0
-          );
-EOF;
-
-        $this->exec($sql);
     }
 }
 
