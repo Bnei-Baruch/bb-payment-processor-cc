@@ -159,14 +159,14 @@ class PelecardAPI
 
         // Store all parameters in DB
         $query_params = array(
-            1 => array($PelecardTransactionId),
-            2 => array($cid),
-            3 => array($cardtype),
-            4 => array($cardnum),
-            5 => array($cardexp),
-            6 => array($firstpay),
-            7 => array($installments),
-            8 => array(implode(",", $data)),
+            1 => array($PelecardTransactionId, 'String'),
+            2 => array($cid, 'String'),
+            3 => array($cardtype, 'String'),
+            4 => array($cardnum, 'String'),
+            5 => array($cardexp, 'String'),
+            6 => array($firstpay, 'String'),
+            7 => array($installments, 'String'),
+            8 => array(implode(",", $data), 'String'),
         );
         CRM_Core_DAO::executeQuery(
             'INSERT INTO civicrm_bb_payment_responses(trxn_id, cid, cardtype, cardnum, cardexp, firstpay, installments, response, created_at) 
