@@ -107,7 +107,7 @@ class PelecardAPI
         $PelecardStatusCode = $data['PelecardStatusCode'] . '';
         if ($PelecardStatusCode > 0) {
             CRM_Core_Error::debug_log_message("Error: " . $PelecardStatusCode);
-            echo "<h1>Error: " . $errors[$PelecardStatusCode] . "</h1>";
+            echo "<h1>Error: ". $PelecardStatusCode . ': ' . $errors[$PelecardStatusCode] . "</h1>";
             return false;
         }
 
