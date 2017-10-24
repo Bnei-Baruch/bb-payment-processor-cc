@@ -167,10 +167,11 @@ class PelecardAPI
             6 => array($firstpay, 'String'),
             7 => array($installments, 'String'),
             8 => array(implode(",", $data), 'String'),
+            9 => array($amount, 'String'),
         );
         CRM_Core_DAO::executeQuery(
-            'INSERT INTO civicrm_bb_payment_responses(trxn_id, cid, cardtype, cardnum, cardexp, firstpay, installments, response, created_at) 
-                   VALUES (%1, %2, %3, %4, %5, %6, %7, %8, NOW())', $query_params);
+            'INSERT INTO civicrm_bb_payment_responses(trxn_id, cid, cardtype, cardnum, cardexp, firstpay, installments, response, amount, created_at) 
+                   VALUES (%1, %2, %3, %4, %5, %6, %7, %8, %9, NOW())', $query_params);
         return $PelecardTransactionId;
     }
 }

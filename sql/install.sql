@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS civicrm_bb_payment_responses (
   firstpay     DECIMAL(20, 2)  NOT NULL COMMENT 'Amount of First Payment',
   installments INTEGER                  DEFAULT 1 COMMENT 'Number of Installments',
   response     TEXT            NOT NULL COMMENT 'Response from Pelecard AS IS',
-  created_at   DATETIME                 COMMENT 'Date Time of Response',
+  amount       DECIMAL(20, 2)           DEFAULT NULL COMMENT 'Total payment amount',
+  created_at   DATETIME COMMENT 'Date Time of Response',
+
   PRIMARY KEY (id),
   KEY (`cid`)
 )
