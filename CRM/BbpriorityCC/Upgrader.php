@@ -3,7 +3,7 @@
 /**
  * Collection of upgrade steps
  */
-class CRM_Bbprioritycash_Upgrader extends CRM_Bbprioritycash_Upgrader_Base {
+class CRM_BbpriorityCC_Upgrader extends CRM_BbpriorityCC_Upgrader_Base {
 
   // By convention, functions that look like "function upgrade_NNNN()" are
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
@@ -11,7 +11,7 @@ class CRM_Bbprioritycash_Upgrader extends CRM_Bbprioritycash_Upgrader_Base {
   public function getCurrentRevision() {
     // reset the saved extension version as well
     try {
-      $xmlfile = CRM_Core_Resources::singleton()->getPath('info.kabbalah.payment.bbprioritycash','info.xml');
+      $xmlfile = CRM_Core_Resources::singleton()->getPath('info.kabbalah.payment.bbpriorityCC','info.xml');
       $myxml = simplexml_load_file($xmlfile);
       $version = (string)$myxml->version;
       CRM_Core_BAO_Setting::setItem($version, 'BB Payments Extension', 'bb_extension_version');

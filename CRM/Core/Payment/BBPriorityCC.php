@@ -2,18 +2,18 @@
 
 /**
  *
- * @package BBPriorityCash [after Dummy Payment Processor]
+ * @package BBPriorityCC [after Dummy Payment Processor]
  * @author Gregory Shilin <gshilin@gmail.com>
  */
 
 require_once 'CRM/Core/Payment.php';
 require_once 'includes/PelecardAPI.php';
-require_once 'BBPriorityCashIPN.php';
+require_once 'BBPriorityCCIPN.php';
 
 /**
- * BBPriorityCash payment processor
+ * BBPriorityCC payment processor
  */
-class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
+class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
 {
     /**
      * mode of operation: live or test
@@ -68,7 +68,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
     {
         $this->_mode = $mode;
         $this->_paymentProcessor = $paymentProcessor;
-        $this->_processorName = 'BB Payment Cash';
+        $this->_processorName = 'BB Payment CC';
     }
 
     /**
@@ -313,20 +313,21 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
         $pelecard->setParameter("Currency", $currency);
         $pelecard->setParameter("MinPayments", 1);
 
-	$financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array(
-	  'return' => "financial_account_id",
-	  'entity_id' => 27,
-	  'account_relationship' => 1,
-	));
+        $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array(
+            'return' => "financial_account_id",
+            'entity_id' => $params["financialTypeID"],
+            'account_relationship' => 1,
+        ));
 
-	$pelecard->setParameter("MaxPayments", 1);
-	$installments = civicrm_api3('FinancialAccount', 'getvalue', array(
-	  'return' => "account_type_code",
-	  'id' => $financial_account_id,
-	));
-	if (!empty($installments)) {
-		$pelecard->setParameter("MaxPayments", $installments);
-	}
+        $installments = civicrm_api3('FinancialAccount', 'getvalue', array(
+            'return' => "account_type_code",
+            'id' => $financial_account_id,
+        ));
+        if (empty($installments)) {
+            $pelecard->setParameter("MaxPayments", 1);
+        } else {
+            $pelecard->setParameter("MaxPayments", $installments);
+        }
 
         global $language;
         $lang = strtoupper($language->language);
@@ -357,7 +358,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
         // Print the tpl to redirect to Pelecard
         $template = CRM_Core_Smarty::singleton();
         $template->assign('url', $url);
-        print $template->fetch('CRM/Core/Payment/Bbprioritycash.tpl');
+        print $template->fetch('CRM/Core/Payment/BbpriorityCC.tpl');
 
         CRM_Utils_System::civiExit();
     }
@@ -365,7 +366,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
     public function handlePaymentNotification()
     {
         $input = $ids = $objects = array();
-        $ipn = new CRM_Core_Payment_BBPriorityCashIPN();
+        $ipn = new CRM_Core_Payment_BBPriorityCCIPN();
 
         // load vars in $input, &ids
         $ipn->getInput($input, $ids);
@@ -378,8 +379,8 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
             'return' => 'id',
         ));
         if (!$ipn->validateResult($this->_paymentProcessor, $input, $ids, $objects, TRUE, $paymentProcessorID)) {
-            // CRM_Core_Error::debug_log_message("bbprioritycash Validation failed");
-            echo("bbprioritycash Validation failed");
+            // CRM_Core_Error::debug_log_message("bbpriorityCC Validation failed");
+            echo("bbpriorityCC Validation failed");
             exit();
         }
 
@@ -389,7 +390,7 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
             // Print the tpl to redirect to success
             $template = CRM_Core_Smarty::singleton();
             $template->assign('url', $returnURL);
-            print $template->fetch('CRM/Core/Payment/Bbprioritycash.tpl');
+            print $template->fetch('CRM/Core/Payment/BbpriorityCC.tpl');
 
             CRM_Utils_System::civiExit();
         } else {

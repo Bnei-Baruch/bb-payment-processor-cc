@@ -2,7 +2,7 @@
 
 require_once 'CRM/Core/Form.php';
 
-class CRM_Bbprioritycash_Form_Settings extends CRM_Core_Form {
+class CRM_BbpriorityCC_Form_Settings extends CRM_Core_Form {
   public function buildQuickForm() {
     $this->add('checkbox', 'ipn_http', 'Use http for IPN Callback');
     $this->add('text', 'merchant_terminal', 'Merchant Terminal', array('size' => 5));
@@ -27,42 +27,42 @@ class CRM_Bbprioritycash_Form_Settings extends CRM_Core_Form {
 
   function setDefaultValues() {
     $defaults = array();
-    $bbprioritycash_settings = CRM_Core_BAO_Setting::getItem("Bbprioritycash Settings", 'bbprioritycash_settings');
-    if (!empty($bbprioritycash_settings)) {
-      $defaults = $bbprioritycash_settings;
+    $bbpriorityCC_settings = CRM_Core_BAO_Setting::getItem("BbpriorityCC Settings", 'bbpriorityCC_settings');
+    if (!empty($bbpriorityCC_settings)) {
+      $defaults = $bbpriorityCC_settings;
     }
     return $defaults;
   }
 
   public function postProcess() {
     $values = $this->exportValues();
-    $bbprioritycash_settings['ipn_http'] = $values['ipn_http'];
-    $bbprioritycash_settings['merchant_terminal'] = $values['merchant_terminal'];
+    $bbpriorityCC_settings['ipn_http'] = $values['ipn_http'];
+    $bbpriorityCC_settings['merchant_terminal'] = $values['merchant_terminal'];
     
     $paymentProcessors = $this->getPaymentProcessors();
     foreach( $paymentProcessors as $paymentProcessor ) {
       $settingId = 'merchant_terminal_' . $paymentProcessor[ "id" ];
-      $bbprioritycash_settings[$settingId] = $values[$settingId];
+      $bbpriorityCC_settings[$settingId] = $values[$settingId];
     }
     
-    CRM_Core_BAO_Setting::setItem($bbprioritycash_settings, "Bb Priority Cash Settings", 'bbprioritycash_settings');
+    CRM_Core_BAO_Setting::setItem($bbpriorityCC_settings, "Bb Priority CC Settings", 'bbpriorityCC_settings');
     CRM_Core_Session::setStatus(
-      ts('Bb Priority Cash Settings Saved', array( 'domain' => 'info.kabbalah.payment.bbprioritycash')),
+      ts('Bb Priority CC Settings Saved', array( 'domain' => 'info.kabbalah.payment.bbpriorityCC')),
       'Configuration Updated', 'success');
 
     parent::postProcess();
   }
 
   public function getPaymentProcessors() {
-    // Get the Bbprioritycash payment processor type
-    $bbprioritycashName = array( 'name' => 'Bbprioritycash' );
-    $paymentProcessorType = civicrm_api3( 'PaymentProcessorType', 'getsingle', $bbprioritycashName );
+    // Get the BbpriorityCC payment processor type
+    $bbpriorityCCName = array( 'name' => 'BbpriorityCC' );
+    $paymentProcessorType = civicrm_api3( 'PaymentProcessorType', 'getsingle', $bbpriorityCCName );
 
-    // Get the payment processors of bbprioritycash type
-    $bbprioritycashType = array(
+    // Get the payment processors of bbpriorityCC type
+    $bbpriorityCCType = array(
       'payment_processor_type_id' => $paymentProcessorType[ 'id' ],
       'is_active' => 1 );
-    $paymentProcessors = civicrm_api3( 'PaymentProcessor', 'get', $bbprioritycashType );
+    $paymentProcessors = civicrm_api3( 'PaymentProcessor', 'get', $bbpriorityCCType );
 
     return $paymentProcessors["values"];
   }

@@ -1,4 +1,4 @@
-Package: info.kabbalah.payment.bbprioritycash
+Package: info.kabbalah.payment.bbpriorityCC
 Copyright (C) 2017, FIXME <FIXME>
 Licensed under the GNU Affero Public License 3.0 (below).
 
