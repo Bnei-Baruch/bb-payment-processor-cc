@@ -313,12 +313,21 @@ class CRM_Core_Payment_BBPriorityCash extends CRM_Core_Payment
         $pelecard->setParameter("Currency", $currency);
         $pelecard->setParameter("MinPayments", 1);
 
-        $pelecard->setParameter("MaxPayments", 1);
-        foreach ($params['eventCustomFields'][114]['fields'] as $key => $val) {
-            if ($val['label'] == 'Number of installments') {
-                $pelecard->setParameter("MaxPayments", $val['customValue'][1]['data']);
-            }
-        }
+	$financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array(
+	  'return' => "financial_account_id",
+	  'entity_id' => 27,
+	  'account_relationship' => 1,
+	));
+
+	$pelecard->setParameter("MaxPayments", 1);
+	$installments = civicrm_api3('FinancialAccount', 'getvalue', array(
+	  'return' => "account_type_code",
+	  'id' => $financial_account_id,
+	));
+	if (!empty($installments)) {
+		$pelecard->setParameter("MaxPayments", $installments);
+	}
+
         global $language;
         $lang = strtoupper($language->language);
         if ($lang == 'HE') {
