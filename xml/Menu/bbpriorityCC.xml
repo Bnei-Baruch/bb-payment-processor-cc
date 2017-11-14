@@ -2,7 +2,7 @@
 <menu>
   <item>
     <path>civicrm/BBPriorityAdmin</path>
-    <page_callback>CRM_bbPriority_Page_bbPriorityAdmin</page_callback>
+    <page_callback>CRM_BbpriorityCC_Page_BBPriorityAdmin</page_callback>
     <title>Payments Administration</title>
     <access_arguments>access CiviContribute</access_arguments>
   </item>
