@@ -313,9 +313,18 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         $pelecard->setParameter("Currency", $currency);
         $pelecard->setParameter("MinPayments", 1);
 
+        $entityId =  $params["financialTypeID"];
+        if (empty($entityId)) {
+            $participants_info = $params['participants_info'];
+	    $key = array_keys($participants_info)[0];
+		$line_item = $participants_info[$key]['lineItem'][0];
+	    $key = array_keys($line_item)[0];
+            $xxx = $line_item[$key];
+            $entityId = $xxx["financial_type_id"];
+        }
         $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array(
             'return' => "financial_account_id",
-            'entity_id' => $params["financialTypeID"],
+            'entity_id' => $entityId,
             'account_relationship' => 1,
         ));
 
