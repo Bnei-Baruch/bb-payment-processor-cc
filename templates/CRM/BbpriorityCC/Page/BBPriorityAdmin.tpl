@@ -1,5 +1,5 @@
 {if $unhandledContributions > 0}
-    <h3 class="error">{ts}Warning!{/ts} There are {$unhandledContributions} unhandled contributions</h3>
+    <h3 class="error" style="border: 1px solid red;">{ts}Warning!{/ts} There are {$unhandledContributions} unhandled contributions</h3>
 {/if}
 
 
