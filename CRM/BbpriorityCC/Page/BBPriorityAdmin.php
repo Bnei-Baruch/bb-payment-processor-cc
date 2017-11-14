@@ -79,7 +79,7 @@ SELECT
   '' QAMO_DETAILS, 
   SUBSTRING(co.source, 1, 48) QAMO_PARTDES, 
   CASE co.payment_instrument_id 
-    WHEN 1 THEN 
+    WHEN 3 THEN 
       (CASE bb.cardtype
       WHEN 1 THEN 'ISR'
       WHEN 2 THEN 'CAL'
@@ -87,7 +87,7 @@ SELECT
       WHEN 4 THEN 'AME'
       WHEN 6 THEN 'LEU'
       END)
-    WHEN 2 THEN
+    WHEN 1 THEN
       'CAS'
   END QAMO_PAYMENTCODE,
   bb.token QAMO_CARDNUM,
