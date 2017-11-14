@@ -201,7 +201,7 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN
             //        $input['reasonCode'] = $this->_errors[$error];
             //      }
 
-            CRM_Core_Error::debug_log_message("BBP IPN Response: About to cancel contribution \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE) . "\n objects: " . print_r($objects, TRUE));
+            CRM_Core_Error::debug_log_message("BBPCC IPN Response: About to cancel contribution \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE) . "\n objects: " . print_r($objects, TRUE));
             return $this->cancelled($objects, $transaction, $input);
         }
         // check if contribution is already completed, if so we ignore this ipn

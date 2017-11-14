@@ -175,10 +175,10 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         $error = array();
 
         if (empty($this->_paymentProcessor["user_name"])) {
-            $error[] = ts("Merchant Name is not set in the BBP Payment Processor settings.");
+            $error[] = ts("Merchant Name is not set in the BBPCC Payment Processor settings.");
         }
         if (empty($this->_paymentProcessor["password"])) {
-            $error[] = ts("Merchant Password is not set in the BBP Payment Processor settings.");
+            $error[] = ts("Merchant Password is not set in the BBPCC Payment Processor settings.");
         }
 
         if (!empty($error)) {
@@ -281,7 +281,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             }
         }
 
-        $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBP&mode=' . $this->_mode
+        $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBPCC&mode=' . $this->_mode
             . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
             . '&returnURL=' . base64_url_encode($returnURL);
 
