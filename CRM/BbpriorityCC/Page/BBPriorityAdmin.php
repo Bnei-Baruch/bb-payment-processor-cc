@@ -48,10 +48,10 @@ class CRM_BbpriorityCC_Page_BBPriorityAdmin extends CRM_Core_Page
                     FROM civicrm_option_group
                     WHERE name = \"contribution_status\"
                     LIMIT 1
-                  ) AND name = 'Completed' -- only completed payments
+                  ) AND name = 'Completed'
                   LIMIT 1
-                ) AND co.is_test = 0 -- not test payments
-                AND co.invoice_number IS NULL -- not submitted to Priority
+                ) AND co.is_test = 0 
+                AND co.invoice_number IS NULL 
       ";
         return CRM_Core_DAO::singleValueQuery($sql);
     }
@@ -68,26 +68,18 @@ class CRM_BbpriorityCC_Page_BBPriorityAdmin extends CRM_Core_Page
         $where = empty($id) ? '' : " AND co.id = " . $id;
         $limit = empty($id) ? " LIMIT " . $n : '';
         $sql = "
-    SELECT
+SELECT
   co.id ID,
   con.nick_name ORG,
   fa.accounting_code QAMO_PARTNAME,
   fa.is_deductible QAMO_VAT,
   fa.account_type_code installments,
-  co.id CID, -- to join with BB table
-  cc.display_name QAMO_CUSTDES, -- שם לקוח
-  (
-    SELECT count(1) + 1
-    FROM civicrm_participant pa
-    WHERE pa.registered_by_id = (
-    	SELECT participant_id
-    	FROM civicrm_participant_payment
-    	WHERE contribution_id = co.id
-    )
-  ) QAMO_DETAILS, -- participants
-  SUBSTRING(co.source, 1, 48) QAMO_PARTDES, -- תאור מוצר
-  CASE co.payment_instrument_id -- should be select
-    WHEN 1 THEN -- Credit Card
+  co.id CID,
+  cc.display_name QAMO_CUSTDES,
+  '' QAMO_DETAILS, 
+  SUBSTRING(co.source, 1, 48) QAMO_PARTDES, 
+  CASE co.payment_instrument_id 
+    WHEN 1 THEN 
       (CASE bb.cardtype
       WHEN 1 THEN 'ISR'
       WHEN 2 THEN 'CAL'
@@ -95,25 +87,25 @@ class CRM_BbpriorityCC_Page_BBPriorityAdmin extends CRM_Core_Page
       WHEN 4 THEN 'AME'
       WHEN 6 THEN 'LEU'
       END)
-    WHEN 2 THEN -- Cash
+    WHEN 2 THEN
       'CAS'
-  END QAMO_PAYMENTCODE, -- קוד אמצעי תשלום
+  END QAMO_PAYMENTCODE,
   bb.token QAMO_CARDNUM,
-  bb.cardnum QAMO_PAYMENTCOUNT, -- מס כרטיס/חשבון
-  bb.cardexp QAMO_VALIDMONTH, -- תוקף
-  COALESCE(bb.amount, co.total_amount) QAMO_PAYPRICE, -- סכום בפועל
+  bb.cardnum QAMO_PAYMENTCOUNT, 
+  bb.cardexp QAMO_VALIDMONTH,
+  COALESCE(bb.amount, co.total_amount) QAMO_PAYPRICE, 
   CASE co.currency
     WHEN 'USD' THEN '$'
     WHEN 'EUR' THEN 'EUR'
     ELSE 'ש\"\"ח'
-  END QAMO_CURRNCY, -- קוד מטבע
-  bb.installments QAMO_PAYCODE, -- קוד תנאי תשלום
-  bb.firstpay QAMO_FIRSTPAY, -- גובה תשלום ראשון
-  emails.email QAMO_EMAIL, -- אי מייל
-  address.street_address QAMO_ADRESS, -- כתובת
-  address.city QAMO_CITY, -- עיר
-  '' QAMO_CELL, -- נייד
-  country.name QAMO_FROM, -- מקור הגעה (country)
+  END QAMO_CURRNCY, 
+  bb.installments QAMO_PAYCODE, 
+  bb.firstpay QAMO_FIRSTPAY, 
+  emails.email QAMO_EMAIL, 
+  address.street_address QAMO_ADRESS, 
+  address.city QAMO_CITY, 
+  '' QAMO_CELL, 
+  country.name QAMO_FROM, 
   COALESCE(bb.created_at, co.receive_date) QAMM_UDATE,
   CASE cc.preferred_language WHEN 'he_IL' THEN 'HE' ELSE 'EN' END QAMO_LANGUAGE
 FROM civicrm_contribution co
@@ -134,10 +126,10 @@ WHERE
       FROM civicrm_option_group
       WHERE name = \"contribution_status\"
       LIMIT 1
-    ) AND name = 'Completed' -- only completed payments
+    ) AND name = 'Completed'
     LIMIT 1
-  ) AND co.is_test = 0 -- not test payments
-  AND co.invoice_number IS NULL -- not submitted yet
+  ) AND co.is_test = 0 
+  AND co.invoice_number IS NULL 
   $where
   ORDER BY co.id DESC
   $limit";
