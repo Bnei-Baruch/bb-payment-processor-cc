@@ -1,5 +1,6 @@
 {if $unhandledContributions > 0}
-    <h3 class="error" style="border: 1px solid red;">{ts}Warning!{/ts} There are {$unhandledContributions} unhandled contributions</h3>
+    <h3 class="error" style="border: 1px solid red;">{ts}Warning!{/ts} There are {$unhandledContributions} unhandled
+        contributions</h3>
 {/if}
 
 
@@ -19,7 +20,7 @@
 </form>
 
 <table class="bbpriority-report">
-    <caption>Recent transactions</caption>
+    <thead>
     <tr>
         <th>{ts}ID{/ts}</th>
         <th>{ts}Org{/ts}</th>
@@ -30,6 +31,7 @@
         <th>{ts}Participants{/ts}</th>
         <th>{ts}Description{/ts}</th>
         <th>{ts}Card Type{/ts}</th>
+        <th>{ts}Payed by{/ts}</th>
         <th>{ts}Card Num{/ts}</th>
         <th>{ts}Expiration{/ts}</th>
         <th>{ts}Amount{/ts}</th>
@@ -44,6 +46,8 @@
         <th>{ts}Language{/ts}</th>
         <th>{ts}Updated at{/ts}</th>
     </tr>
+    </thead>
+    <tbody>
     {foreach from=$BBPriorityLog item=row}
         <tr>
             <td>{$row.ID}</td>
@@ -71,4 +75,5 @@
             <td>{$row.QAMM_UDATE}</td>
         </tr>
     {/foreach}
+    </tbody>
 </table>
