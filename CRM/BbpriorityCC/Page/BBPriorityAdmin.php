@@ -147,18 +147,34 @@ WHERE
             foreach ($internal as $key) {
                 unset($entry[$key]);
             }
-            $params['invoice_id'] = $entry['invoice_num'];
-            $result = civicrm_api('Contribution', 'getsingle', $params);
-            if (!empty($result['contribution_id'])) {
-                $entry += $result;
-                $entry['contributionURL'] = CRM_Utils_System::url('civicrm/contact/view/contribution', 'reset=1&id=' . $entry['contribution_id'] . '&cid=' . $entry['contact_id'] . '&action=view&selectedChild=Contribute');
-            }
-            if (!empty($result['contact_id'])) {
-                $entry['contactURL'] = CRM_Utils_System::url('civicrm/contact/view', 'reset=1&cid=' . $entry['contact_id']);
-            }
             $log[] = $entry;
         }
         return $log;
     }
 
 }
+
+//[ID] => 40088
+//[ORG] => bnei
+//[QAMO_PARTNAME] => 98982262
+//[QAMO_VAT] => 1
+//[installments] => 1
+//[CID] => 40088
+//[QAMO_CUSTDES] => ויקטור נטייב
+//[QAMO_DETAILS] =>
+//[QAMO_PARTDES] => תשלומים מקוונות: תשלום מעשר
+//[QAMO_PAYMENTCODE] =>
+//[QAMO_CARDNUM] =>
+//[QAMO_PAYMENTCOUNT] =>
+//[QAMO_VALIDMONTH] =>
+//[QAMO_PAYPRICE] => 1.00
+//[QAMO_CURRNCY] => ש""ח
+//[QAMO_PAYCODE] =>
+//[QAMO_FIRSTPAY] =>
+//[QAMO_EMAIL] => victor.nataev@gmail.com
+//[QAMO_ADRESS] => טבריה 2
+//[QAMO_CITY] => אשקלון
+//[QAMO_CELL] =>
+//[QAMO_FROM] => Israel
+//[QAMM_UDATE] => 2017-05-11 21:15:56
+//[QAMO_LANGUAGE] => HE
