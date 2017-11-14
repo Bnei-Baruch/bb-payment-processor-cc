@@ -31,7 +31,7 @@
         <th>{ts}Participants{/ts}</th>
         <th>{ts}Description{/ts}</th>
         <th>{ts}Card Type{/ts}</th>
-        <th>{ts}Payed by{/ts}</th>
+        <th>{ts}Token{/ts}</th>
         <th>{ts}Card Num{/ts}</th>
         <th>{ts}Expiration{/ts}</th>
         <th>{ts}Amount{/ts}</th>
