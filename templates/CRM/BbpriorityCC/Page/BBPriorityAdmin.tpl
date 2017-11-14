@@ -1,14 +1,12 @@
-<p>The current time is {$currentTime}</p>
-
 {if $unhandledContributions > 0}
-    <h3>{ts}Warning!{/ts} There are {$unhandledContributions} unhandled contributions</h3>
+    <h3 class="error">{ts}Warning!{/ts} There are {$unhandledContributions} unhandled contributions</h3>
 {/if}
 
 
 <h3>Recent transactions</h3>
 <form method="GET">
     <fieldset>
-        <legend>Search result</legend>
+        <legend>Filter By</legend>
         <table>
             <tr>
                 <td>
