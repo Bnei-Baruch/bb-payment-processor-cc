@@ -196,7 +196,7 @@ function bbpriorityCC_civicrm_navigationMenu(&$menu)
         'admin_page' => array(
             'label' => 'BBPriority Payments Admin',
             'name' => 'BBPriority Payments Admin',
-            'url' => 'civicrm/BBPriorityAdmin',
+            'url' => 'civicrm/bbPriorityAdmin',
             'parent' => array('Contributions'),
             'permission' => 'access CiviContribute',
             'operator' => 'AND',
