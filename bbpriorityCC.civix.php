@@ -7,27 +7,27 @@
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
  */
-function _bbpriorityCC_civix_civicrm_config(&$config = NULL) {
-  static $configured = FALSE;
-  if ($configured) {
-    return;
-  }
-  $configured = TRUE;
+function _bbpriorityCC_civix_civicrm_config(&$config = NULL)
+{
+    static $configured = FALSE;
+    if ($configured) {
+        return;
+    }
+    $configured = TRUE;
 
-  $template =& CRM_Core_Smarty::singleton();
+    $template =& CRM_Core_Smarty::singleton();
 
-  $extRoot = dirname(__FILE__) . DIRECTORY_SEPARATOR;
-  $extDir = $extRoot . 'templates';
+    $extRoot = dirname(__FILE__) . DIRECTORY_SEPARATOR;
+    $extDir = $extRoot . 'templates';
 
-  if (is_array($template->template_dir)) {
-    array_unshift($template->template_dir, $extDir);
-  }
-  else {
-    $template->template_dir = array($extDir, $template->template_dir);
-  }
+    if (is_array($template->template_dir)) {
+        array_unshift($template->template_dir, $extDir);
+    } else {
+        $template->template_dir = array($extDir, $template->template_dir);
+    }
 
-  $include_path = $extRoot . PATH_SEPARATOR . get_include_path();
-  set_include_path($include_path);
+    $include_path = $extRoot . PATH_SEPARATOR . get_include_path();
+    set_include_path($include_path);
 }
 
 /**
@@ -37,10 +37,11 @@ function _bbpriorityCC_civix_civicrm_config(&$config = NULL) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_xmlMenu
  */
-function _bbpriorityCC_civix_civicrm_xmlMenu(&$files) {
-  foreach (_bbpriorityCC_civix_glob(__DIR__ . '/xml/Menu/*.xml') as $file) {
-    $files[] = $file;
-  }
+function _bbpriorityCC_civix_civicrm_xmlMenu(&$files)
+{
+    foreach (_bbpriorityCC_civix_glob(__DIR__ . '/xml/Menu/*.xml') as $file) {
+        $files[] = $file;
+    }
 }
 
 /**
@@ -48,11 +49,12 @@ function _bbpriorityCC_civix_civicrm_xmlMenu(&$files) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
-function _bbpriorityCC_civix_civicrm_install() {
-  _bbpriorityCC_civix_civicrm_config();
-  if ($upgrader = _bbpriorityCC_civix_upgrader()) {
-    $upgrader->onInstall();
-  }
+function _bbpriorityCC_civix_civicrm_install()
+{
+    _bbpriorityCC_civix_civicrm_config();
+    if ($upgrader = _bbpriorityCC_civix_upgrader()) {
+        $upgrader->onInstall();
+    }
 }
 
 /**
@@ -60,13 +62,14 @@ function _bbpriorityCC_civix_civicrm_install() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_postInstall
  */
-function _bbpriorityCC_civix_civicrm_postInstall() {
-  _bbpriorityCC_civix_civicrm_config();
-  if ($upgrader = _bbpriorityCC_civix_upgrader()) {
-    if (is_callable(array($upgrader, 'onPostInstall'))) {
-      $upgrader->onPostInstall();
+function _bbpriorityCC_civix_civicrm_postInstall()
+{
+    _bbpriorityCC_civix_civicrm_config();
+    if ($upgrader = _bbpriorityCC_civix_upgrader()) {
+        if (is_callable(array($upgrader, 'onPostInstall'))) {
+            $upgrader->onPostInstall();
+        }
     }
-  }
 }
 
 /**
@@ -74,11 +77,12 @@ function _bbpriorityCC_civix_civicrm_postInstall() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
  */
-function _bbpriorityCC_civix_civicrm_uninstall() {
-  _bbpriorityCC_civix_civicrm_config();
-  if ($upgrader = _bbpriorityCC_civix_upgrader()) {
-    $upgrader->onUninstall();
-  }
+function _bbpriorityCC_civix_civicrm_uninstall()
+{
+    _bbpriorityCC_civix_civicrm_config();
+    if ($upgrader = _bbpriorityCC_civix_upgrader()) {
+        $upgrader->onUninstall();
+    }
 }
 
 /**
@@ -86,13 +90,14 @@ function _bbpriorityCC_civix_civicrm_uninstall() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_enable
  */
-function _bbpriorityCC_civix_civicrm_enable() {
-  _bbpriorityCC_civix_civicrm_config();
-  if ($upgrader = _bbpriorityCC_civix_upgrader()) {
-    if (is_callable(array($upgrader, 'onEnable'))) {
-      $upgrader->onEnable();
+function _bbpriorityCC_civix_civicrm_enable()
+{
+    _bbpriorityCC_civix_civicrm_config();
+    if ($upgrader = _bbpriorityCC_civix_upgrader()) {
+        if (is_callable(array($upgrader, 'onEnable'))) {
+            $upgrader->onEnable();
+        }
     }
-  }
 }
 
 /**
@@ -101,13 +106,14 @@ function _bbpriorityCC_civix_civicrm_enable() {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_disable
  * @return mixed
  */
-function _bbpriorityCC_civix_civicrm_disable() {
-  _bbpriorityCC_civix_civicrm_config();
-  if ($upgrader = _bbpriorityCC_civix_upgrader()) {
-    if (is_callable(array($upgrader, 'onDisable'))) {
-      $upgrader->onDisable();
+function _bbpriorityCC_civix_civicrm_disable()
+{
+    _bbpriorityCC_civix_civicrm_config();
+    if ($upgrader = _bbpriorityCC_civix_upgrader()) {
+        if (is_callable(array($upgrader, 'onDisable'))) {
+            $upgrader->onDisable();
+        }
     }
-  }
 }
 
 /**
@@ -121,22 +127,23 @@ function _bbpriorityCC_civix_civicrm_disable() {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_upgrade
  */
-function _bbpriorityCC_civix_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
-  if ($upgrader = _bbpriorityCC_civix_upgrader()) {
-    return $upgrader->onUpgrade($op, $queue);
-  }
+function _bbpriorityCC_civix_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL)
+{
+    if ($upgrader = _bbpriorityCC_civix_upgrader()) {
+        return $upgrader->onUpgrade($op, $queue);
+    }
 }
 
 /**
  * @return CRM_BbpriorityCC_Upgrader
  */
-function _bbpriorityCC_civix_upgrader() {
-  if (!file_exists(__DIR__ . '/CRM/BbpriorityCC/Upgrader.php')) {
-    return NULL;
-  }
-  else {
-    return CRM_BbpriorityCC_Upgrader_Base::instance();
-  }
+function _bbpriorityCC_civix_upgrader()
+{
+    if (!file_exists(__DIR__ . '/CRM/BbpriorityCC/Upgrader.php')) {
+        return NULL;
+    } else {
+        return CRM_BbpriorityCC_Upgrader_Base::instance();
+    }
 }
 
 /**
@@ -149,34 +156,35 @@ function _bbpriorityCC_civix_upgrader() {
  * @param $pattern string, glob pattern, eg "*.txt"
  * @return array(string)
  */
-function _bbpriorityCC_civix_find_files($dir, $pattern) {
-  if (is_callable(array('CRM_Utils_File', 'findFiles'))) {
-    return CRM_Utils_File::findFiles($dir, $pattern);
-  }
+function _bbpriorityCC_civix_find_files($dir, $pattern)
+{
+    if (is_callable(array('CRM_Utils_File', 'findFiles'))) {
+        return CRM_Utils_File::findFiles($dir, $pattern);
+    }
 
-  $todos = array($dir);
-  $result = array();
-  while (!empty($todos)) {
-    $subdir = array_shift($todos);
-    foreach (_bbpriorityCC_civix_glob("$subdir/$pattern") as $match) {
-      if (!is_dir($match)) {
-        $result[] = $match;
-      }
-    }
-    if ($dh = opendir($subdir)) {
-      while (FALSE !== ($entry = readdir($dh))) {
-        $path = $subdir . DIRECTORY_SEPARATOR . $entry;
-        if ($entry{0} == '.') {
+    $todos = array($dir);
+    $result = array();
+    while (!empty($todos)) {
+        $subdir = array_shift($todos);
+        foreach (_bbpriorityCC_civix_glob("$subdir/$pattern") as $match) {
+            if (!is_dir($match)) {
+                $result[] = $match;
+            }
         }
-        elseif (is_dir($path)) {
-          $todos[] = $path;
+        if ($dh = opendir($subdir)) {
+            while (FALSE !== ($entry = readdir($dh))) {
+                $path = $subdir . DIRECTORY_SEPARATOR . $entry;
+                if ($entry{0} == '.') {
+                } elseif (is_dir($path)) {
+                    $todos[] = $path;
+                }
+            }
+            closedir($dh);
         }
-      }
-      closedir($dh);
     }
-  }
-  return $result;
+    return $result;
 }
+
 /**
  * (Delegated) Implements hook_civicrm_managed().
  *
@@ -184,20 +192,21 @@ function _bbpriorityCC_civix_find_files($dir, $pattern) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
  */
-function _bbpriorityCC_civix_civicrm_managed(&$entities) {
-  $mgdFiles = _bbpriorityCC_civix_find_files(__DIR__, '*.mgd.php');
-  foreach ($mgdFiles as $file) {
-    $es = include $file;
-    foreach ($es as $e) {
-      if (empty($e['module'])) {
-        $e['module'] = 'info.kabbalah.payment.bbpriorityCC';
-      }
-      $entities[] = $e;
-      if (empty($e['params']['version'])) {
-        $e['params']['version'] = '3';
-      }
+function _bbpriorityCC_civix_civicrm_managed(&$entities)
+{
+    $mgdFiles = _bbpriorityCC_civix_find_files(__DIR__, '*.mgd.php');
+    foreach ($mgdFiles as $file) {
+        $es = include $file;
+        foreach ($es as $e) {
+            if (empty($e['module'])) {
+                $e['module'] = 'info.kabbalah.payment.bbpriorityCC';
+            }
+            $entities[] = $e;
+            if (empty($e['params']['version'])) {
+                $e['params']['version'] = '3';
+            }
+        }
     }
-  }
 }
 
 /**
@@ -209,24 +218,25 @@ function _bbpriorityCC_civix_civicrm_managed(&$entities) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_caseTypes
  */
-function _bbpriorityCC_civix_civicrm_caseTypes(&$caseTypes) {
-  if (!is_dir(__DIR__ . '/xml/case')) {
-    return;
-  }
-
-  foreach (_bbpriorityCC_civix_glob(__DIR__ . '/xml/case/*.xml') as $file) {
-    $name = preg_replace('/\.xml$/', '', basename($file));
-    if ($name != CRM_Case_XMLProcessor::mungeCaseType($name)) {
-      $errorMessage = sprintf("Case-type file name is malformed (%s vs %s)", $name, CRM_Case_XMLProcessor::mungeCaseType($name));
-      CRM_Core_Error::fatal($errorMessage);
-      // throw new CRM_Core_Exception($errorMessage);
+function _bbpriorityCC_civix_civicrm_caseTypes(&$caseTypes)
+{
+    if (!is_dir(__DIR__ . '/xml/case')) {
+        return;
     }
-    $caseTypes[$name] = array(
-      'module' => 'info.kabbalah.payment.bbpriorityCC',
-      'name' => $name,
-      'file' => $file,
-    );
-  }
+
+    foreach (_bbpriorityCC_civix_glob(__DIR__ . '/xml/case/*.xml') as $file) {
+        $name = preg_replace('/\.xml$/', '', basename($file));
+        if ($name != CRM_Case_XMLProcessor::mungeCaseType($name)) {
+            $errorMessage = sprintf("Case-type file name is malformed (%s vs %s)", $name, CRM_Case_XMLProcessor::mungeCaseType($name));
+            CRM_Core_Error::fatal($errorMessage);
+            // throw new CRM_Core_Exception($errorMessage);
+        }
+        $caseTypes[$name] = array(
+            'module' => 'info.kabbalah.payment.bbpriorityCC',
+            'name' => $name,
+            'file' => $file,
+        );
+    }
 }
 
 /**
@@ -238,20 +248,21 @@ function _bbpriorityCC_civix_civicrm_caseTypes(&$caseTypes) {
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_angularModules
  */
-function _bbpriorityCC_civix_civicrm_angularModules(&$angularModules) {
-  if (!is_dir(__DIR__ . '/ang')) {
-    return;
-  }
-
-  $files = _bbpriorityCC_civix_glob(__DIR__ . '/ang/*.ang.php');
-  foreach ($files as $file) {
-    $name = preg_replace(':\.ang\.php$:', '', basename($file));
-    $module = include $file;
-    if (empty($module['ext'])) {
-      $module['ext'] = 'info.kabbalah.payment.bbpriorityCC';
+function _bbpriorityCC_civix_civicrm_angularModules(&$angularModules)
+{
+    if (!is_dir(__DIR__ . '/ang')) {
+        return;
     }
-    $angularModules[$name] = $module;
-  }
+
+    $files = _bbpriorityCC_civix_glob(__DIR__ . '/ang/*.ang.php');
+    foreach ($files as $file) {
+        $name = preg_replace(':\.ang\.php$:', '', basename($file));
+        $module = include $file;
+        if (empty($module['ext'])) {
+            $module['ext'] = 'info.kabbalah.payment.bbpriorityCC';
+        }
+        $angularModules[$name] = $module;
+    }
 }
 
 /**
@@ -266,9 +277,10 @@ function _bbpriorityCC_civix_civicrm_angularModules(&$angularModules) {
  * @param string $pattern
  * @return array, possibly empty
  */
-function _bbpriorityCC_civix_glob($pattern) {
-  $result = glob($pattern);
-  return is_array($result) ? $result : array();
+function _bbpriorityCC_civix_glob($pattern)
+{
+    $result = glob($pattern);
+    return is_array($result) ? $result : array();
 }
 
 /**
@@ -278,75 +290,82 @@ function _bbpriorityCC_civix_glob($pattern) {
  * @param string $path - path where insertion should happen (ie. Administer/System Settings)
  * @param array $item - menu you need to insert (parent/child attributes will be filled for you)
  */
-function _bbpriorityCC_civix_insert_navigation_menu(&$menu, $path, $item) {
-  // If we are done going down the path, insert menu
-  if (empty($path)) {
-    $menu[] = array(
-      'attributes' => array_merge(array(
-        'label'      => CRM_Utils_Array::value('name', $item),
-        'active'     => 1,
-      ), $item),
-    );
-    return TRUE;
-  }
-  else {
-    // Find an recurse into the next level down
-    $found = FALSE;
-    $path = explode('/', $path);
-    $first = array_shift($path);
-    foreach ($menu as $key => &$entry) {
-      if ($entry['attributes']['name'] == $first) {
-        if (!isset($entry['child'])) {
-          $entry['child'] = array();
+function _bbpriorityCC_civix_insert_navigation_menu(&$menu, $path, $item, $parentId = NULL)
+{
+    static $navId;
+
+    // If we are done going down the path, insert menu
+    if (empty($path)) {
+        if (!$navId) $navId = CRM_Core_DAO::singleValueQuery("SELECT max(id) FROM civicrm_navigation");
+        $navId ++;
+        $menu[$navId] = array(
+            'attributes' => array_merge($item, array(
+                'label' => CRM_Utils_Array::value('name', $item),
+                'active' => 1,
+                'parentID'   => $parentId,
+                'navID'      => $navId,
+            )),
+        );
+        return true;
+    } else {
+        // Find an recurse into the next level down
+        $found = FALSE;
+        $path = explode('/', $path);
+        $first = array_shift($path);
+        foreach ($menu as $key => &$entry) {
+            if ($entry['attributes']['name'] == $first) {
+                if (!$entry['child']) $entry['child'] = array();
+                $found = _bbpriorityCC_civix_insert_navigation_menu($entry['child'], implode('/', $path), $item, $key);
+            }
         }
-        $found = _bbpriorityCC_civix_insert_navigation_menu($entry['child'], implode('/', $path), $item, $key);
-      }
+        return $found;
     }
-    return $found;
-  }
 }
 
 /**
  * (Delegated) Implements hook_civicrm_navigationMenu().
  */
-function _bbpriorityCC_civix_navigationMenu(&$nodes) {
-  if (!is_callable(array('CRM_Core_BAO_Navigation', 'fixNavigationMenu'))) {
-    _bbpriorityCC_civix_fixNavigationMenu($nodes);
-  }
+function _bbpriorityCC_civix_navigationMenu(&$nodes)
+{
+    if (!is_callable(array('CRM_Core_BAO_Navigation', 'fixNavigationMenu'))) {
+        _bbpriorityCC_civix_fixNavigationMenu($nodes);
+    }
 }
 
 /**
  * Given a navigation menu, generate navIDs for any items which are
  * missing them.
  */
-function _bbpriorityCC_civix_fixNavigationMenu(&$nodes) {
-  $maxNavID = 1;
-  array_walk_recursive($nodes, function($item, $key) use (&$maxNavID) {
-    if ($key === 'navID') {
-      $maxNavID = max($maxNavID, $item);
-    }
-  });
-  _bbpriorityCC_civix_fixNavigationMenuItems($nodes, $maxNavID, NULL);
+function _bbpriorityCC_civix_fixNavigationMenu(&$nodes)
+{
+    $maxNavID = 1;
+    array_walk_recursive($nodes, function ($item, $key) use (&$maxNavID) {
+        if ($key === 'navID') {
+            $maxNavID = max($maxNavID, $item);
+        }
+    });
+    _bbpriorityCC_civix_fixNavigationMenuItems($nodes, $maxNavID, NULL);
 }
 
-function _bbpriorityCC_civix_fixNavigationMenuItems(&$nodes, &$maxNavID, $parentID) {
-  $origKeys = array_keys($nodes);
-  foreach ($origKeys as $origKey) {
-    if (!isset($nodes[$origKey]['attributes']['parentID']) && $parentID !== NULL) {
-      $nodes[$origKey]['attributes']['parentID'] = $parentID;
+function _bbpriorityCC_civix_fixNavigationMenuItems(&$nodes, &$maxNavID, $parentID)
+{
+    $origKeys = array_keys($nodes);
+    foreach ($origKeys as $origKey) {
+        if (!isset($nodes[$origKey]['attributes']['parentID']) && $parentID !== NULL) {
+            $nodes[$origKey]['attributes']['parentID'] = $parentID;
+        }
+        // If no navID, then assign navID and fix key.
+        if (!isset($nodes[$origKey]['attributes']['navID'])) {
+            $newKey = ++$maxNavID;
+            $nodes[$origKey]['attributes']['navID'] = $newKey;
+            $nodes[$newKey] = $nodes[$origKey];
+            unset($nodes[$origKey]);
+            $origKey = $newKey;
+        }
+        if (isset($nodes[$origKey]['child']) && is_array($nodes[$origKey]['child'])) {
+            _bbpriorityCC_civix_fixNavigationMenuItems($nodes[$origKey]['child'], $maxNavID, $nodes[$origKey]['attributes']['navID']);
+        }
     }
-    // If no navID, then assign navID and fix key.
-    if (!isset($nodes[$origKey]['attributes']['navID'])) {
-      $newKey = ++$maxNavID;
-      $nodes[$origKey]['attributes']['navID'] = $newKey;
-      $nodes[$newKey] = $nodes[$origKey];
-      unset($nodes[$origKey]);
-      $origKey = $newKey;
-    }
-    if (isset($nodes[$origKey]['child']) && is_array($nodes[$origKey]['child'])) {
-      _bbpriorityCC_civix_fixNavigationMenuItems($nodes[$origKey]['child'], $maxNavID, $nodes[$origKey]['attributes']['navID']);
-    }
-  }
 }
 
 /**
@@ -354,15 +373,16 @@ function _bbpriorityCC_civix_fixNavigationMenuItems(&$nodes, &$maxNavID, $parent
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_alterSettingsFolders
  */
-function _bbpriorityCC_civix_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
-  static $configured = FALSE;
-  if ($configured) {
-    return;
-  }
-  $configured = TRUE;
+function _bbpriorityCC_civix_civicrm_alterSettingsFolders(&$metaDataFolders = NULL)
+{
+    static $configured = FALSE;
+    if ($configured) {
+        return;
+    }
+    $configured = TRUE;
 
-  $settingsDir = __DIR__ . DIRECTORY_SEPARATOR . 'settings';
-  if (is_dir($settingsDir) && !in_array($settingsDir, $metaDataFolders)) {
-    $metaDataFolders[] = $settingsDir;
-  }
+    $settingsDir = __DIR__ . DIRECTORY_SEPARATOR . 'settings';
+    if (is_dir($settingsDir) && !in_array($settingsDir, $metaDataFolders)) {
+        $metaDataFolders[] = $settingsDir;
+    }
 }

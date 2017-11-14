@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <menu>
   <item>
-    <path>civicrm/bbpriorityCC/settings</path>
-    <page_callback>CRM_BbppriorityCC_Form_Settings</page_callback>
-    <title>BBPriorityCC Settings</title>
-    <access_arguments>administer CiviCRM</access_arguments>
+    <path>civicrm/BBPriorityAdmin</path>
+    <page_callback>CRM_BbppriorityCC_Page_bbPriorityAdmin</page_callback>
+    <title>BBPriority Payments Admin</title>
+    <access_arguments>access CiviContribute,administer CiviCRM</access_arguments>
   </item>
 </menu>
