@@ -28,7 +28,7 @@ class CRM_BbpriorityCC_Page_BBPriorityAdmin extends CRM_Core_Page
         }
         $log = $this->getLog($search);
         $this->assign('search', $search);
-        $this->assign('Log', $log);
+        $this->assign('BBPriorityLog', $log);
         parent::run();
     }
 
@@ -146,6 +146,15 @@ WHERE
             // Remove internal fields.
             foreach ($internal as $key) {
                 unset($entry[$key]);
+            }
+            $params['invoice_id'] = $entry['invoice_num'];
+            $result = civicrm_api('Contribution', 'getsingle', $params);
+            if (!empty($result['contribution_id'])) {
+                $entry += $result;
+                $entry['contributionURL'] = CRM_Utils_System::url('civicrm/contact/view/contribution', 'reset=1&id=' . $entry['contribution_id'] . '&cid=' . $entry['contact_id'] . '&action=view&selectedChild=Contribute');
+            }
+            if (!empty($result['contact_id'])) {
+                $entry['contactURL'] = CRM_Utils_System::url('civicrm/contact/view', 'reset=1&cid=' . $entry['contact_id']);
             }
             $log[] = $entry;
         }

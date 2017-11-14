@@ -23,9 +23,9 @@
     <tr>
         <th>{ts}ID{/ts}</th>
     </tr>
-    {foreach from=$Log item=row}
+    {foreach from=$BBPriorityLog item=row}
         <tr>
-            <td>{$row.id}</td>
+            <td>{CRM_Core_Error::debug('_DB_DATAOBJECT', $row)}</td>
         </tr>
     {/foreach}
 </table>
