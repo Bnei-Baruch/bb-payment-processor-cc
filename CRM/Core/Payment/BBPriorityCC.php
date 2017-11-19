@@ -225,6 +225,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             var_dump($this->_paymentProcessor);
             var_dump($params);
             echo "</pre>";
+        http_build_query()
             exit();
         */
 
