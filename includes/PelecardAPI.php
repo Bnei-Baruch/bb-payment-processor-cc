@@ -135,7 +135,7 @@ class PelecardAPI
         $cardtype = $data['CreditCardCompanyClearer'] . '';
         $cardnum = $data['CreditCardNumber'] . '';
         $cardexp = $data['CreditCardExpDate'] . '';
-        $amount = $data['amount'] . '';
+        $amount = $data['DebitTotal'] / 100.00;
         $installments = $data['DebitTotal'];
         if ($installments == 1) {
             $firstpay = $amount;
@@ -152,7 +152,7 @@ class PelecardAPI
         $this->connect($json, '/ValidateByUniqueKey');
 
         $error = $this->getParameter('Error');
-        if (is_array($error) && $error['ErrCode'] > 0) {
+        if (is_array($error) && isset($error['ErrCode']) && $error['ErrCode'] > 0) {
             CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
             return false;
         }
