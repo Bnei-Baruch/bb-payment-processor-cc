@@ -113,7 +113,6 @@ class PelecardAPI
 
         $ConfirmationKey = $data['ConfirmationKey'] . '';
         $UserKey = $data['UserKey'] . '';
-        $amount = $data['amount'] . '';
 
         $this->vars_pay = [];
         $this->setParameter("user", $processor["user_name"]);
@@ -136,7 +135,8 @@ class PelecardAPI
         $cardtype = $data['CreditCardCompanyClearer'] . '';
         $cardnum = $data['CreditCardNumber'] . '';
         $cardexp = $data['CreditCardExpDate'] . '';
-        $installments = $data['TotalPayments'];
+        $amount = $data['amount'] . '';
+        $installments = $data['DebitTotal'];
         if ($installments == 1) {
             $firstpay = $amount;
         } else {
