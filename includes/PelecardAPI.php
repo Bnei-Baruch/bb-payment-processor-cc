@@ -174,21 +174,15 @@ class PelecardAPI
                    VALUES (%1, %2, %3, %4, %5, %6, %7, %8, %9, NOW())', $query_params);
         return $PelecardTransactionId;
     }
-}
 
-/******  Base64 Functions  ******/
-function base64_url_encode($input)
-{
-    return strtr(base64_encode($input), '+/', '-_');
-}
+    /******  Base64 Functions  ******/
+    function base64_url_encode($input)
+    {
+        return strtr(base64_encode($input), '+/', '-_');
+    }
 
-function encodeBase64($data)
-{
-    $data = base64_encode($data);
-    return $data;
-}
-
-function base64_url_decode($input)
-{
-    return base64_decode(strtr($input, '-_', '+/'));
+    function base64_url_decode($input)
+    {
+        return base64_decode(strtr($input, '-_', '+/'));
+    }
 }
