@@ -298,10 +298,12 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         $pelecard->setParameter("GoodUrl", $merchantUrl); // ReturnUrl should be used _AFTER_ payment confirmation
         $pelecard->setParameter("ErrorUrl", $merchantUrl);
         $pelecard->setParameter("CancelUrl", $cancelURL);
-        $pelecard->setParameter("Total", $params["amount"] * 100);
         if ($params["amount"] == 1) {
             // Maaser
+            $pelecard->setParameter("Total", 0);
             $pelecard->setParameter("FreeTotal", true);
+        } else {
+            $pelecard->setParameter("Total", $params["amount"] * 100);
         }
 
         if ($params["currencyID"] == "EUR") {
