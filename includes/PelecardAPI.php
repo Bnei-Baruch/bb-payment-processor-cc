@@ -166,7 +166,7 @@ class PelecardAPI
             5 => array($cardexp, 'String'),
             6 => array($firstpay, 'String'),
             7 => array($installments, 'String'),
-            8 => array(implode(",", $data), 'String'),
+            8 => array(http_build_query($data), 'String'),
             9 => array($amount, 'String'),
         );
         CRM_Core_DAO::executeQuery(
