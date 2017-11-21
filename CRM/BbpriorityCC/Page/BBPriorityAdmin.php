@@ -143,7 +143,7 @@ WHERE
             foreach ($internal as $key) {
                 unset($entry[$key]);
             }
-            $params['invoice_id'] = $entry['invoice_num'];
+            // It just disappeared :( $params['invoice_id'] = $entry['invoice_num'];
             $result = civicrm_api('Contribution', 'getsingle', $params);
             if (!empty($result['contribution_id'])) {
                 $entry += $result;
