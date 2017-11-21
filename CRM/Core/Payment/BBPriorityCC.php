@@ -287,6 +287,22 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
             . '&returnURL=' . $pelecard->base64_url_encode($returnURL);
 
+        global $language;
+        $lang = strtoupper($language->language);
+        if ($lang == 'HE') {
+            $pelecard->setParameter("TopText", 'BB כרטיסי אשראי');
+            $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
+            $pelecard->setParameter("Language", 'HE');
+        } elseif ($lang == 'RU') {
+            $pelecard->setParameter("TopText", 'BB Кредитные Карты');
+            $pelecard->setParameter("BottomText", '© Бней Барух Каббала лаАм');
+            $pelecard->setParameter("Language", 'RU');
+        } else {
+            $pelecard->setParameter("TopText", 'BB Credit Cards');
+            $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
+            $pelecard->setParameter("Language", 'EN');
+        }
+
         $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
         $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
         $pelecard->setParameter("terminal", $this->_paymentProcessor["signature"]);
@@ -302,6 +318,15 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             // Maaser
             $pelecard->setParameter("Total", 0);
             $pelecard->setParameter("FreeTotal", true);
+            $text = array();
+            if ($lang == 'HE') {
+                $text["cs_free_total"] = "הכנס סכום מתאים";
+            } elseif ($lang == 'RU') {
+                $text["cs_free_total"] = "Введите сумму";
+            } else {
+                $text["cs_free_total"] = "Please Select Proper Sum";
+            }
+            $pelecard->setParameter("CaptionSet", $text);
         } else {
             $pelecard->setParameter("Total", $params["amount"] * 100);
         }
@@ -339,22 +364,6 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             $pelecard->setParameter("MaxPayments", 1);
         } else {
             $pelecard->setParameter("MaxPayments", $installments);
-        }
-
-        global $language;
-        $lang = strtoupper($language->language);
-        if ($lang == 'HE') {
-            $pelecard->setParameter("TopText", 'BB כרטיסי אשראי');
-            $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
-            $pelecard->setParameter("Language", 'HE');
-        } elseif ($lang == 'RU') {
-            $pelecard->setParameter("TopText", 'BB Кредитные Карты');
-            $pelecard->setParameter("BottomText", '© Бней Барух Каббала лаАм');
-            $pelecard->setParameter("Language", 'RU');
-        } else {
-            $pelecard->setParameter("TopText", 'BB Credit Cards');
-            $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
-            $pelecard->setParameter("Language", 'EN');
         }
 
         $result = $pelecard->getRedirectUrl();
