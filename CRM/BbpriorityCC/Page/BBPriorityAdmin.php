@@ -103,7 +103,7 @@ SELECT
   '' QAMO_CELL, 
   country.name QAMO_FROM, 
   COALESCE(bb.created_at, co.receive_date) QAMM_UDATE,
-  CASE cc.preferred_language WHEN 'he_IL' THEN 'HEB' ELSE 'ENG' END QAMO_LANGUAGE
+  CASE cc.preferred_language WHEN 'he_IL' THEN 'HE' ELSE 'EN' END QAMO_LANGUAGE
 FROM civicrm_contribution co
   INNER JOIN civicrm_contact cc ON co.contact_id = cc.id
   INNER JOIN civicrm_entity_financial_account efa ON co.financial_type_id = efa.entity_id AND efa.account_relationship = 1
