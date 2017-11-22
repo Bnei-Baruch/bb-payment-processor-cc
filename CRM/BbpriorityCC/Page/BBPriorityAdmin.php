@@ -93,7 +93,7 @@ SELECT
   CASE co.currency
     WHEN 'USD' THEN '$'
     WHEN 'EUR' THEN 'EUR'
-    ELSE 'ש\"\"ח'
+    ELSE 'ש\"ח'
   END QAMO_CURRNCY, 
   bb.installments QAMO_PAYCODE, 
   bb.firstpay QAMO_FIRSTPAY, 
