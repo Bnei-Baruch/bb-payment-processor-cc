@@ -225,7 +225,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             var_dump($this->_paymentProcessor);
             var_dump($params);
             echo "</pre>";
-        http_build_query()
+        http_build_query();
             exit();
         */
 
@@ -287,26 +287,68 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
             . '&returnURL=' . $pelecard->base64_url_encode($returnURL);
 
+        $entityId = $params["financialTypeID"];
+        if (empty($entityId)) {
+            $participants_info = $params['participants_info'];
+            $key = array_keys($participants_info)[0];
+            $line_item = $participants_info[$key]['lineItem'][0];
+            $key = array_keys($line_item)[0];
+            $xxx = $line_item[$key];
+            $entityId = $xxx["financial_type_id"];
+        }
+        $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array(
+            'return' => "financial_account_id",
+            'entity_id' => $entityId,
+            'account_relationship' => 1,
+        ));
+        $contact_id = civicrm_api3('FinancialAccount', 'getvalue', array(
+            'return' => "contact_id",
+            'id' => $financial_account_id,
+            'account_relationship' => 1,
+        ));
+        $nick_name = civicrm_api3('Contact', 'getvalue', array(
+            'return' => "nick_name",
+            'id' => $contact_id,
+            'account_relationship' => 1,
+        ));
+
         global $language;
         $lang = strtoupper($language->language);
-        if ($lang == 'HE') {
-            $pelecard->setParameter("TopText", 'BB כרטיסי אשראי');
-            $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
-            $pelecard->setParameter("Language", 'HE');
-        } elseif ($lang == 'RU') {
-            $pelecard->setParameter("TopText", 'BB Кредитные Карты');
-            $pelecard->setParameter("BottomText", '© Бней Барух Каббала лаАм');
-            $pelecard->setParameter("Language", 'RU');
-        } else {
-            $pelecard->setParameter("TopText", 'BB Credit Cards');
-            $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
-            $pelecard->setParameter("Language", 'EN');
+        if ($nick_name == 'bnei') {
+            if ($lang == 'HE') {
+                $pelecard->setParameter("TopText", 'בני ברוך קבלה לעם');
+                $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
+                $pelecard->setParameter("Language", 'HE');
+            } elseif ($lang == 'RU') {
+                $pelecard->setParameter("TopText", 'Бней Барух Каббала лаАм');
+                $pelecard->setParameter("BottomText", '© Бней Барух Каббала лаАм');
+                $pelecard->setParameter("Language", 'RU');
+            } else {
+                $pelecard->setParameter("TopText", 'Bnei Baruch Kabbalah laAm');
+                $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
+                $pelecard->setParameter("Language", 'EN');
+            }
+            $pelecard->setParameter("LogoUrl", "http://www.kab.co.il/images/hebmain/logo1.png");
+        } elseif ($nick_name == 'arvu') {
+            if ($lang == 'HE') {
+                $pelecard->setParameter("TopText", 'תנועת הערבות לאיחוד העם');
+                $pelecard->setParameter("BottomText", '© תנועת הערבות לאיחוד העם');
+                $pelecard->setParameter("Language", 'HE');
+            } elseif ($lang == 'RU') {
+                $pelecard->setParameter("TopText", 'Общественное движение «Арвут»');
+                $pelecard->setParameter("BottomText", '© Общественное движение «Арвут»');
+                $pelecard->setParameter("Language", 'RU');
+            } else {
+                $pelecard->setParameter("TopText", 'The Arvut Social Movement');
+                $pelecard->setParameter("BottomText", '© The Arvut Social Movement');
+                $pelecard->setParameter("Language", 'EN');
+            }
+            $pelecard->setParameter("LogoUrl", "http://www.arvut.org/templates/ja_purity_ii/images/arvut_logo.png");
         }
 
         $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
         $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
         $pelecard->setParameter("terminal", $this->_paymentProcessor["signature"]);
-        $pelecard->setParameter("LogoUrl", $this->_paymentProcessor["url_site"]);
 
         $pelecard->setParameter("UserKey", $params['qfKey']);
 
@@ -340,21 +382,6 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         }
         $pelecard->setParameter("Currency", $currency);
         $pelecard->setParameter("MinPayments", 1);
-
-        $entityId = $params["financialTypeID"];
-        if (empty($entityId)) {
-            $participants_info = $params['participants_info'];
-            $key = array_keys($participants_info)[0];
-            $line_item = $participants_info[$key]['lineItem'][0];
-            $key = array_keys($line_item)[0];
-            $xxx = $line_item[$key];
-            $entityId = $xxx["financial_type_id"];
-        }
-        $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array(
-            'return' => "financial_account_id",
-            'entity_id' => $entityId,
-            'account_relationship' => 1,
-        ));
 
         $installments = civicrm_api3('FinancialAccount', 'getvalue', array(
             'return' => "account_type_code",
