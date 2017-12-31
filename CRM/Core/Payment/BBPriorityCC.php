@@ -314,7 +314,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
 
         global $language;
         $lang = strtoupper($language->language);
-        if ($nick_name == 'bnei') {
+        if ($nick_name == 'ben2') {
             if ($lang == 'HE') {
                 $pelecard->setParameter("TopText", 'בני ברוך קבלה לעם');
                 $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
@@ -329,7 +329,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter("Language", 'EN');
             }
             $pelecard->setParameter("LogoUrl", "http://www.kab.co.il/images/hebmain/logo1.png");
-        } elseif ($nick_name == 'arvu') {
+        } elseif ($nick_name == 'arvut') {
             if ($lang == 'HE') {
                 $pelecard->setParameter("TopText", 'תנועת הערבות לאיחוד העם');
                 $pelecard->setParameter("BottomText", '© תנועת הערבות לאיחוד העם');
