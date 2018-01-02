@@ -329,7 +329,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter("Language", 'EN');
             }
             $pelecard->setParameter("LogoUrl", "http://www.kab.co.il/images/hebmain/logo1.png");
-        } elseif ($nick_name == 'arvut') {
+        } elseif ($nick_name == 'arvut2') {
             if ($lang == 'HE') {
                 $pelecard->setParameter("TopText", 'תנועת הערבות לאיחוד העם');
                 $pelecard->setParameter("BottomText", '© תנועת הערבות לאיחוד העם');
