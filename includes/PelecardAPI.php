@@ -140,7 +140,7 @@ class PelecardAPI
         if ($installments == 1) {
             $firstpay = $amount;
         } else {
-            $firstpay = $data['FirstPaymentTotal'];
+            $firstpay = $data['FirstPaymentTotal'] / 100.00;
         }
 
         $this->vars_pay = [];
