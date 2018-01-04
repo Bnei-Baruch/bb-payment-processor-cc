@@ -106,6 +106,13 @@ class PelecardAPI
         $PelecardTransactionId = $data['PelecardTransactionId'] . '';
         $PelecardStatusCode = $data['PelecardStatusCode'] . '';
         if ($PelecardStatusCode > 0) {
+            $query_params = array(
+                1 => array($PelecardStatusCode, 'String'),
+                2 => array($contribution->id, 'String')
+            );
+            CRM_Core_DAO::executeQuery(
+                'UPDATE civicrm_contribution SET invoice_number = %1, contribution_status_id = 4 WHERE id = %2', $query_params);
+
             CRM_Core_Error::debug_log_message("Error: " . $PelecardStatusCode);
             echo "<h1>Error: ". $PelecardStatusCode . ': ' . $errors[$PelecardStatusCode] . "</h1>";
             return false;
@@ -125,6 +132,13 @@ class PelecardAPI
 
         $error = $this->getParameter('Error');
         if (is_array($error) && $error['ErrCode'] > 0) {
+            $query_params = array(
+                1 => array($error['ErrCode'], 'String'),
+                2 => array($contribution->id, 'String')
+            );
+            CRM_Core_DAO::executeQuery(
+                'UPDATE civicrm_contribution SET invoice_number = %1, contribution_status_id = 4 WHERE id = %2', $query_params);
+
             CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
             return false;
         }
@@ -153,6 +167,13 @@ class PelecardAPI
 
         $error = $this->getParameter('Error');
         if (is_array($error) && isset($error['ErrCode']) && $error['ErrCode'] > 0) {
+            $query_params = array(
+                1 => array($error['ErrCode'], 'String'),
+                2 => array($contribution->id, 'String')
+            );
+            CRM_Core_DAO::executeQuery(
+                'UPDATE civicrm_contribution SET invoice_number = %1, contribution_status_id = 4 WHERE id = %2', $query_params);
+
             CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
             return false;
         }
@@ -172,7 +193,7 @@ class PelecardAPI
         CRM_Core_DAO::executeQuery(
             'INSERT INTO civicrm_bb_payment_responses(trxn_id, cid, cardtype, cardnum, cardexp, firstpay, installments, response, amount, created_at) 
                    VALUES (%1, %2, %3, %4, %5, %6, %7, %8, %9, NOW())', $query_params);
-        return $PelecardTransactionId;
+        return true;
     }
 
     /******  Base64 Functions  ******/

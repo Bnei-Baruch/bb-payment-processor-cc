@@ -393,6 +393,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         } else {
             $pelecard->setParameter("MaxPayments", $installments);
         }
+        $name = $params['first_name'] . ' ' . $params['last_name'];
 
         $result = $pelecard->getRedirectUrl();
         $error = $result[0];
