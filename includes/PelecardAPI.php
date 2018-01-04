@@ -132,7 +132,7 @@ class PelecardAPI
         $data = $this->getParameter('ResultData');
         $this->stringToArray($data);
 
-        $cardtype = $data['CreditCardCompanyClearer'] . '';
+        $cardtype = $data['CreditCardCompanyIssuer'] . '';
         $cardnum = $data['CreditCardNumber'] . '';
         $cardexp = $data['CreditCardExpDate'] . '';
         $amount = $data['DebitTotal'] / 100.00;
