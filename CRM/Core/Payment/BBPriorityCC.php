@@ -319,14 +319,17 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter("TopText", 'בני ברוך קבלה לעם');
                 $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
                 $pelecard->setParameter("Language", 'HE');
+                $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
             } elseif ($lang == 'RU') {
                 $pelecard->setParameter("TopText", 'Бней Барух Каббала лаАм');
                 $pelecard->setParameter("BottomText", '© Бней Барух Каббала лаАм');
                 $pelecard->setParameter("Language", 'RU');
+                $pelecard->setCS('cs_payments', 'Количество платежей (только для жителей Израиля)');
             } else {
                 $pelecard->setParameter("TopText", 'Bnei Baruch Kabbalah laAm');
                 $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
                 $pelecard->setParameter("Language", 'EN');
+                $pelecard->setCS('cs_payments', 'Number of installments (for Israel residents only)');
             }
             $pelecard->setParameter("LogoUrl", "https://checkout.kabbalah.info/logo1.png");
         } elseif ($nick_name == 'arvut2') {
@@ -334,14 +337,17 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter("TopText", 'תנועת הערבות לאיחוד העם');
                 $pelecard->setParameter("BottomText", '© תנועת הערבות לאיחוד העם');
                 $pelecard->setParameter("Language", 'HE');
+                $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
             } elseif ($lang == 'RU') {
                 $pelecard->setParameter("TopText", 'Общественное движение «Арвут»');
                 $pelecard->setParameter("BottomText", '© Общественное движение «Арвут»');
                 $pelecard->setParameter("Language", 'RU');
+                $pelecard->setCS('cs_payments', 'Количество платежей (только для жителей Израиля)');
             } else {
                 $pelecard->setParameter("TopText", 'The Arvut Social Movement');
                 $pelecard->setParameter("BottomText", '© The Arvut Social Movement');
                 $pelecard->setParameter("Language", 'EN');
+                $pelecard->setCS('cs_payments', 'Number of installments (for Israel residents only)');
             }
             $pelecard->setParameter("LogoUrl", "https://checkout.arvut.org/arvut_logo.png");
         }
@@ -361,19 +367,20 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             // Maaser
             $pelecard->setParameter("Total", 0);
             $pelecard->setParameter("FreeTotal", true);
-            $text = array();
             if ($lang == 'HE') {
-                $text["cs_free_total"] = "הכנס סכום מתאים";
+                $text = "אנא הכנס סכום מתאים";
+                $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-he-1.css");
             } elseif ($lang == 'RU') {
-                $text["cs_free_total"] = "Введите сумму";
+                $text = "Введите правильную сумму";
+                $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
             } else {
-                $text["cs_free_total"] = "Please Select Proper Sum";
+                $text = "Please Select Proper Sum";
+                $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
             }
-            $pelecard->setParameter("CaptionSet", $text);
+            $pelecard->setCS("cs_free_total", $text);
         } else {
             $pelecard->setParameter("Total", $params["amount"] * 100);
         }
-
         if ($params["currencyID"] == "EUR") {
             $currency = 978;
         } elseif ($params["currencyID"] == "USD") {
