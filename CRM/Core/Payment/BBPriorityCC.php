@@ -368,17 +368,19 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             $pelecard->setParameter("Total", 0);
             $pelecard->setParameter("FreeTotal", true);
             if ($lang == 'HE') {
-                $text = "הכנס סכום מתאים";
+                $text = "אנא הכנס סכום מתאים";
+                $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-he-1.css");
             } elseif ($lang == 'RU') {
-                $text = "Введите сумму";
+                $text = "Введите правильную сумму";
+                $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
             } else {
                 $text = "Please Select Proper Sum";
+                $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
             }
             $pelecard->setCS("cs_free_total", $text);
         } else {
             $pelecard->setParameter("Total", $params["amount"] * 100);
         }
-
         if ($params["currencyID"] == "EUR") {
             $currency = 978;
         } elseif ($params["currencyID"] == "USD") {
