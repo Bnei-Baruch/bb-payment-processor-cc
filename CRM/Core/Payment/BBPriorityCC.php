@@ -319,14 +319,17 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter("TopText", 'בני ברוך קבלה לעם');
                 $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
                 $pelecard->setParameter("Language", 'HE');
+                $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
             } elseif ($lang == 'RU') {
                 $pelecard->setParameter("TopText", 'Бней Барух Каббала лаАм');
                 $pelecard->setParameter("BottomText", '© Бней Барух Каббала лаАм');
                 $pelecard->setParameter("Language", 'RU');
+                $pelecard->setCS('cs_payments', 'Количество платежей (только для жителей Израиля)');
             } else {
                 $pelecard->setParameter("TopText", 'Bnei Baruch Kabbalah laAm');
                 $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
                 $pelecard->setParameter("Language", 'EN');
+                $pelecard->setCS('cs_payments', 'Number of installments (for Israel residents only)');
             }
             $pelecard->setParameter("LogoUrl", "http://www.kab.co.il/images/hebmain/logo1.png");
         } elseif ($nick_name == 'arvut2') {
@@ -334,14 +337,17 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter("TopText", 'תנועת הערבות לאיחוד העם');
                 $pelecard->setParameter("BottomText", '© תנועת הערבות לאיחוד העם');
                 $pelecard->setParameter("Language", 'HE');
+                $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
             } elseif ($lang == 'RU') {
                 $pelecard->setParameter("TopText", 'Общественное движение «Арвут»');
                 $pelecard->setParameter("BottomText", '© Общественное движение «Арвут»');
                 $pelecard->setParameter("Language", 'RU');
+                $pelecard->setCS('cs_payments', 'Количество платежей (только для жителей Израиля)');
             } else {
                 $pelecard->setParameter("TopText", 'The Arvut Social Movement');
                 $pelecard->setParameter("BottomText", '© The Arvut Social Movement');
                 $pelecard->setParameter("Language", 'EN');
+                $pelecard->setCS('cs_payments', 'Number of installments (for Israel residents only)');
             }
             $pelecard->setParameter("LogoUrl", "http://www.arvut.org/templates/ja_purity_ii/images/arvut_logo.png");
         }

@@ -4,6 +4,12 @@ class PelecardAPI
 {
     /******  Array of request data ******/
     var $vars_pay = array();
+    var $caption_set = array();
+
+    function setCS($key, $value)
+    {
+        $this->caption_set[$key] = $value;
+    }
 
     /******  Set parameter ******/
     function setParameter($key, $value)
@@ -24,7 +30,11 @@ class PelecardAPI
     /******  Convert Hash to JSON ******/
     function arrayToJson()
     {
-        return json_encode($this->vars_pay); //(PHP 5 >= 5.2.0)
+        $json = array(
+            $this->vars_pay,
+            "CaptionSet" => $this->caption_set
+        );
+        return json_encode($json); //(PHP 5 >= 5.2.0)
     }
 
     /******  Convert String to Hash ******/
@@ -114,7 +124,7 @@ class PelecardAPI
                 'UPDATE civicrm_contribution SET invoice_number = %1, contribution_status_id = 4 WHERE id = %2', $query_params);
 
             CRM_Core_Error::debug_log_message("Error: " . $PelecardStatusCode);
-            echo "<h1>Error: ". $PelecardStatusCode . ': ' . $errors[$PelecardStatusCode] . "</h1>";
+            echo "<h1>Error: " . $PelecardStatusCode . ': ' . $errors[$PelecardStatusCode] . "</h1>";
             return false;
         }
 
