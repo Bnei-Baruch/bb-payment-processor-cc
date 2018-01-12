@@ -30,11 +30,10 @@ class PelecardAPI
     /******  Convert Hash to JSON ******/
     function arrayToJson()
     {
-        $json = array(
-            $this->vars_pay,
-            "CaptionSet" => $this->caption_set
-        );
-        return json_encode($json); //(PHP 5 >= 5.2.0)
+        if (!empty($this->caption_set)) {
+            $this->setParameter('CaptionSet', $this->caption_set);
+        }
+        return json_encode($this->vars_pay); //(PHP 5 >= 5.2.0)
     }
 
     /******  Convert String to Hash ******/
