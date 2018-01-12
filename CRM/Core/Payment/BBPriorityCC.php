@@ -328,7 +328,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
                 $pelecard->setParameter("Language", 'EN');
             }
-            $pelecard->setParameter("LogoUrl", "http://www.kab.co.il/images/hebmain/logo1.png");
+            $pelecard->setParameter("LogoUrl", "https://checkout.kabbalah.info/logo1.png");
         } elseif ($nick_name == 'arvut2') {
             if ($lang == 'HE') {
                 $pelecard->setParameter("TopText", 'תנועת הערבות לאיחוד העם');
@@ -343,7 +343,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter("BottomText", '© The Arvut Social Movement');
                 $pelecard->setParameter("Language", 'EN');
             }
-            $pelecard->setParameter("LogoUrl", "http://www.arvut.org/templates/ja_purity_ii/images/arvut_logo.png");
+            $pelecard->setParameter("LogoUrl", "https://checkout.arvut.org/arvut_logo.png");
         }
 
         $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
