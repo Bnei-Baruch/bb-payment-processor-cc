@@ -367,15 +367,14 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             // Maaser
             $pelecard->setParameter("Total", 0);
             $pelecard->setParameter("FreeTotal", true);
-            $text = array();
             if ($lang == 'HE') {
-                $text["cs_free_total"] = "הכנס סכום מתאים";
+                $text = "הכנס סכום מתאים";
             } elseif ($lang == 'RU') {
-                $text["cs_free_total"] = "Введите сумму";
+                $text = "Введите сумму";
             } else {
-                $text["cs_free_total"] = "Please Select Proper Sum";
+                $text = "Please Select Proper Sum";
             }
-            $pelecard->setParameter("CaptionSet", $text);
+            $pelecard->setCS("cs_free_total", $text);
         } else {
             $pelecard->setParameter("Total", $params["amount"] * 100);
         }
