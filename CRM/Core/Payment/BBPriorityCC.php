@@ -320,16 +320,25 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
                 $pelecard->setParameter("Language", 'HE');
                 $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
+                $pelecard->setCS('ShowCofirmationCheckBox', 'True');
+                $pelecard->setCS('TextOnConfirmationBox', 'אני מסכים עם תנאי השירות');
+                $pelecard->setCS('ConfirmationLink', 'https://checkout.kabbalah.info/legacy-statement-crm-he.html');
             } elseif ($lang == 'RU') {
                 $pelecard->setParameter("TopText", 'Бней Барух Каббала лаАм');
                 $pelecard->setParameter("BottomText", '© Бней Барух Каббала лаАм');
                 $pelecard->setParameter("Language", 'RU');
                 $pelecard->setCS('cs_payments', 'Количество платежей (только для жителей Израиля)');
+                $pelecard->setCS('ShowCofirmationCheckBox', 'True');
+                $pelecard->setCS('TextOnConfirmationBox', 'Я согласен с условиями обслуживания');
+                $pelecard->setCS('ConfirmationLink', 'https://checkout.kabbalah.info/legacy-statement-crm-he.html');
             } else {
                 $pelecard->setParameter("TopText", 'Bnei Baruch Kabbalah laAm');
                 $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
                 $pelecard->setParameter("Language", 'EN');
                 $pelecard->setCS('cs_payments', 'Number of installments (for Israel residents only)');
+                $pelecard->setCS('ShowCofirmationCheckBox', 'True');
+                $pelecard->setCS('TextOnConfirmationBox', 'I agree with the terms of service');
+                $pelecard->setCS('ConfirmationLink', 'https://checkout.kabbalah.info/legacy-statement-crm-he.html');
             }
             $pelecard->setParameter("LogoUrl", "https://checkout.kabbalah.info/logo1.png");
         } elseif ($nick_name == 'arvut2') {
