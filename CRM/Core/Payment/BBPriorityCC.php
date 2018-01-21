@@ -283,7 +283,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         }
 
         $pelecard = new PelecardAPI;
-        $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_name=BBPCC&mode=' . $this->_mode
+        $merchantUrl = $config->userFrameworkBaseURL . 'civicrm/payment/ipn?processor_id=' . $this->_paymentProcessor["id"] . '&mode=' . $this->_mode
             . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
             . '&returnURL=' . $pelecard->base64_url_encode($returnURL);
 
