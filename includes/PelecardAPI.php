@@ -58,7 +58,7 @@ class PelecardAPI
         $this->setParameter("TelField", 'hide');
         $this->setParameter("FeedbackDataTransferMethod", 'POST');
         $this->setParameter("FirstPayment", 'auto');
-        $this->setParameter("ShopNo", 1000);
+        $this->setParameter("ShopNo", 100);
         $this->setParameter("SetFocus", 'CC');
         $this->setParameter("HiddenPelecardLogo", true);
         $cards = [
