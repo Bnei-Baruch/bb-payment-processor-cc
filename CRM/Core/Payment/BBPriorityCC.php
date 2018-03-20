@@ -292,22 +292,10 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
             . '&returnURL=' . $pelecard->base64_url_encode($returnURL);
 
-        if (array_key_exists("financialTypeID", $params)) {
-            $entityId = $params["financialTypeID"];
-        } elseif (array_key_exists("financial_type_id", $params)) {
-            $entityId = $params["financial_type_id"];
-        } else {
-            CRM_Core_Error::fatal("Expected param 'Financial Type Id' does not present");
-            exit();
-        }
+        $entityId = self::array_column_recursive_first($params, "financialTypeID");
         if (empty($entityId)) {
-            $participants_info = $params['participants_info'];
-            $key = array_keys($participants_info)[0];
-            $line_item = $participants_info[$key]['lineItem'][0];
-            $key = array_keys($line_item)[0];
-            $xxx = $line_item[$key];
-            $entityId = $xxx["financial_type_id"];
-        }
+	    $entityId = self::array_column_recursive_first($params, "financial_type_id");
+	}
         $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array(
             'return' => "financial_account_id",
             'entity_id' => $entityId,
@@ -503,6 +491,15 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         } else {
             return $array[array_values($result)[0]];
         }
+    }
+
+    static function array_column_recursive_first(array $haystack, $needle) {
+        $found = [];
+        array_walk_recursive($haystack, function($value, $key) use (&$found, $needle) {
+            if ($key == $needle)
+                $found[] = $value;
+        });
+        return $found[0];
     }
 
 }
