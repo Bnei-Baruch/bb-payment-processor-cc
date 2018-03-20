@@ -292,13 +292,13 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
             . '&returnURL=' . $pelecard->base64_url_encode($returnURL);
 
-        $entityId = self::array_column_recursive_first($params, "financialTypeID");
-        if (empty($entityId)) {
-	    $entityId = self::array_column_recursive_first($params, "financial_type_id");
-	}
+        $financialTypeID = self::array_column_recursive_first($params, "financialTypeID");
+        if (empty($financialTypeID)) {
+            $financialTypeID = self::array_column_recursive_first($params, "financial_type_id");
+        }
         $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array(
             'return' => "financial_account_id",
-            'entity_id' => $entityId,
+            'entity_id' => $financialTypeID,
             'account_relationship' => 1,
         ));
         $contact_id = civicrm_api3('FinancialAccount', 'getvalue', array(
@@ -493,13 +493,14 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         }
     }
 
-    static function array_column_recursive_first(array $haystack, $needle) {
+    /* Find first occurrence of needle somewhere in haystack (on all levels) */
+    static function array_column_recursive_first(array $haystack, $needle)
+    {
         $found = [];
-        array_walk_recursive($haystack, function($value, $key) use (&$found, $needle) {
+        array_walk_recursive($haystack, function ($value, $key) use (&$found, $needle) {
             if ($key == $needle)
                 $found[] = $value;
         });
         return $found[0];
     }
-
 }
