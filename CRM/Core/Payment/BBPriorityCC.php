@@ -402,7 +402,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             'return' => "account_type_code",
             'id' => $financial_account_id,
         ));
-        if (empty($installments)) {
+        if ((int)$installments == 0) {
             $pelecard->setParameter("MaxPayments", 1);
         } else {
             $pelecard->setParameter("MaxPayments", $installments);
