@@ -192,6 +192,8 @@ function bbpriorityCC_civicrm_alterSettingsFolders(&$metaDataFolders = NULL)
  */
 function bbpriorityCC_civicrm_navigationMenu(&$menu)
 {
+    // The selected access permissions are bad; Do not use it!!!
+    return;
     $pages = array(
         'admin_page' => array(
             'label' => 'BBPriority Payments Admin',
