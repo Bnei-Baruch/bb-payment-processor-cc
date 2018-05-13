@@ -500,7 +500,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         array_walk_recursive($haystack, function ($value, $key) use (&$found, $needle) {
             if (gettype($key) == 'string' && $key == $needle) {
                 $found[] = $value;
-	    }
+            }
         });
         return $found[0];
     }
