@@ -201,7 +201,7 @@ class PelecardAPI
         );
         CRM_Core_DAO::executeQuery(
             'INSERT INTO civicrm_bb_payment_responses(trxn_id, cid, cardtype, cardnum, cardexp, firstpay, installments, response, amount, created_at) 
-                   VALUES (%1, %2, %3, %4, %5, %6, %7, %8, %9, CURRENT_TIMESTAMP())', $query_params);
+                   VALUES (%1, %2, %3, %4, %5, %6, %7, %8, %9, NOW())', $query_params);
         return true;
     }
 
