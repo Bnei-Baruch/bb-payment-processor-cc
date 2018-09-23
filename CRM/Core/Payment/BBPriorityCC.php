@@ -227,6 +227,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             echo "</pre>";
         http_build_query();
             exit();
+              echo static::formatBacktrace(debug_backtrace());
         */
 
         global $base_url;
