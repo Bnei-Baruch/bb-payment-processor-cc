@@ -159,6 +159,9 @@ class PelecardAPI
         $cardnum = $data['CreditCardNumber'] . '';
         $cardexp = $data['CreditCardExpDate'] . '';
         $amount = $data['DebitTotal'] / 100.00;
+        if ($data['DebitType'] == '51') {
+            $amount = -$amount;
+        }
         $installments = $data['TotalPayments'];
         if ($installments == 1) {
             $firstpay = $amount;
