@@ -386,6 +386,9 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
             }
             $pelecard->setCS("cs_free_total", $text);
+        } else if (($params["amount"] * 100) <= 0) {
+            CRM_Core_Error::fatal(ts('Amount must be positive!!!'));
+            exit();
         } else {
             $pelecard->setParameter("Total", $params["amount"] * 100);
         }
