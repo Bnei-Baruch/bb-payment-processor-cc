@@ -139,6 +139,8 @@ function _bbpriorityCC_civix_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL)
  */
 function _bbpriorityCC_civix_upgrader()
 {
+    return NULL;
+
     if (!file_exists(__DIR__ . '/CRM/BbpriorityCC/Upgrader.php')) {
         return NULL;
     } else {
