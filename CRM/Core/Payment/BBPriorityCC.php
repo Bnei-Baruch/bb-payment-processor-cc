@@ -371,22 +371,21 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         $pelecard->setParameter("GoodUrl", $merchantUrl); // ReturnUrl should be used _AFTER_ payment confirmation
         $pelecard->setParameter("ErrorUrl", $merchantUrl);
         $pelecard->setParameter("CancelUrl", $cancelURL);
-        if ($params["amount"] == 1) {
-            // Maaser
-            $pelecard->setParameter("Total", 0);
-            $pelecard->setParameter("FreeTotal", true);
-            if ($lang == 'HE') {
-                $text = "אנא הכנס סכום מתאים";
-                $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-he-1.css");
-            } elseif ($lang == 'RU') {
-                $text = "Введите правильную сумму";
-                $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
-            } else {
-                $text = "Please Select Proper Sum";
-                $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
-            }
-            $pelecard->setCS("cs_free_total", $text);
-        } else if (($params["amount"] * 100) <= 0) {
+        // Free amount example
+        // $pelecard->setParameter("Total", 0);
+        // $pelecard->setParameter("FreeTotal", true);
+        // if ($lang == 'HE') {
+            // $text = "אנא הכנס סכום מתאים";
+            // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-he-1.css");
+        // } elseif ($lang == 'RU') {
+            // $text = "Введите правильную сумму";
+            // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
+        // } else {
+            // $text = "Please Select Proper Sum";
+            // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
+        // }
+        // $pelecard->setCS("cs_free_total", $text);
+        if (($params["amount"] * 100) <= 0) {
             CRM_Core_Error::fatal(ts('Amount must be positive!!!'));
             exit();
         } else {
