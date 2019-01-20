@@ -10,7 +10,7 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN
     {
         parent::__construct();
 
-        $this->_bbpAPI = new PelecardAPI;
+        $this->_bbpAPI = new PelecardAPICC;
         $this->errors = [
             '000' => 'Permitted transaction.',
             '001' => 'The card is blocked, confiscate it.',

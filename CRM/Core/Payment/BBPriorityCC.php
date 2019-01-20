@@ -7,7 +7,7 @@
  */
 
 require_once 'CRM/Core/Payment.php';
-require_once 'includes/PelecardAPI.php';
+require_once 'includes/PelecardAPICC.php';
 require_once 'BBPriorityCCIPN.php';
 
 /**
@@ -288,7 +288,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             }
         }
 
-        $pelecard = new PelecardAPI;
+        $pelecard = new PelecardAPICC;
         $merchantUrl = $base_url . '/' . strtolower($lang) . '/civicrm/payment/ipn?processor_id=' . $this->_paymentProcessor["id"] . '&mode=' . $this->_mode
             . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
             . '&returnURL=' . $pelecard->base64_url_encode($returnURL);
@@ -452,7 +452,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         }
 
         if ($ipn->single($input, $ids, $objects, FALSE, FALSE)) {
-            $returnURL = (new PelecardAPI)->base64_url_decode($input['returnURL']);
+            $returnURL = (new PelecardAPICC)->base64_url_decode($input['returnURL']);
 
             // Print the tpl to redirect to success
             $template = CRM_Core_Smarty::singleton();
