@@ -230,6 +230,8 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
               echo static::formatBacktrace(debug_backtrace());
         */
 
+        CRM_Core_Error::debug_log_message("ENTER: " . $params['contactID']);
+
         global $base_url;
         global $language;
         $lang = strtoupper($language->language);
@@ -297,6 +299,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         if (empty($financialTypeID)) {
             $financialTypeID = self::array_column_recursive_first($params, "financial_type_id");
         }
+        CRM_Core_Error::debug_log_message("URL: " . $params['contactID'] . ", " . $merchantUrl . ", " . $financialTypeID);
         $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array(
             'return' => "financial_account_id",
             'entity_id' => $financialTypeID,
@@ -313,6 +316,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             'account_relationship' => 1,
         ));
 
+        CRM_Core_Error::debug_log_message("API3: " . $params['contactID'] . ", " . $financial_account_id . ", " . $contact_id . ", " . $nick_name);
         if ($nick_name == 'ben2') {
             if ($lang == 'HE') {
                 $pelecard->setParameter("TopText", 'בני ברוך קבלה לעם');
@@ -412,15 +416,17 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         }
         $name = $params['first_name'] . ' ' . $params['last_name'];
 
+        CRM_Core_Error::debug_log_message("REDIRECT::BEFORE: " . $params['contactID']);
         $result = $pelecard->getRedirectUrl();
         $error = $result[0];
         if ($error > 0) {
             $message = $result[1];
-            CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error, "message" => $message]);
+            CRM_Core_Error::debug_log_message("Error[" . $error . "]: " . $message);
             return FALSE;
         } else {
             $url = $result[1];
         }
+        CRM_Core_Error::debug_log_message("REDIRECT::AFTER: " . $params['contactID'] . ", " . $url);
 
         // Print the tpl to redirect to Pelecard
         $template = CRM_Core_Smarty::singleton();
@@ -452,7 +458,19 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         }
 
         if ($ipn->single($input, $ids, $objects, FALSE, FALSE)) {
-            $returnURL = (new PelecardAPICC)->base64_url_decode($input['returnURL']);
+            CRM_Core_Error::debug_log_message("BACK");
+	    $url = (new PelecardAPICC)->base64_url_decode($input['returnURL']);
+	    $key = "success";
+	    $value = "1";
+	    $url = preg_replace('/(.*)(?|&)'. $key .'=[^&]+?(&)(.*)/i', '$1$2$4', $url .'&');
+	    $url = substr($url, 0, -1);
+	    if (strpos($url, '?') === false) {
+	        $returnURL = ($url .'?'. $key .'='. $value);
+	    } else {
+	        $returnURL = ($url .'&'. $key .'='. $value);
+	    }
+
+            CRM_Core_Error::debug_log_message("BACK: " . $returnURL);
 
             // Print the tpl to redirect to success
             $template = CRM_Core_Smarty::singleton();
