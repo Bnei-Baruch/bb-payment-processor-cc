@@ -468,16 +468,16 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
 
         if ($ipn->single($input, $ids, $objects, FALSE, FALSE)) {
             CRM_Core_Error::debug_log_message("BACK");
-	    $url = (new PelecardAPICC)->base64_url_decode($input['returnURL']);
-	    $key = "success";
-	    $value = "1";
-	    $url = preg_replace('/(.*)(?|&)'. $key .'=[^&]+?(&)(.*)/i', '$1$2$4', $url .'&');
-	    $url = substr($url, 0, -1);
-	    if (strpos($url, '?') === false) {
-	        $returnURL = ($url .'?'. $key .'='. $value);
-	    } else {
-	        $returnURL = ($url .'&'. $key .'='. $value);
-	    }
+            $url = (new PelecardAPICC)->base64_url_decode($input['returnURL']);
+            $key = "success";
+            $value = "1";
+            $url = preg_replace('/(.*)(?|&)' . $key . '=[^&]+?(&)(.*)/i', '$1$2$4', $url . '&');
+            $url = substr($url, 0, -1);
+            if (strpos($url, '?') === false) {
+                $returnURL = ($url . '?' . $key . '=' . $value);
+            } else {
+                $returnURL = ($url . '&' . $key . '=' . $value);
+            }
 
             CRM_Core_Error::debug_log_message("BACK: " . $returnURL);
 
