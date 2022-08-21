@@ -211,36 +211,6 @@ class PelecardAPICC
             'INSERT INTO civicrm_bb_payment_responses(trxn_id, cid, cardtype, cardnum, cardexp, firstpay, installments, response, amount, token, is_regular, approval, created_at) 
                    VALUES (%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, 1, %11, NOW())', $query_params);
 
-        // Update custom fields
-
-        // Group 212 Payment_details: civicrm_value_payment_detai_212
-        //    entity_id: contribution ID
-        //    token_1187
-        //    cardnum_1188
-        //    cardexp_1189
-        //    reference_1190
-        $query_params = array(
-            1 => array($cid, 'String'),
-            2 => array($token, 'String'),
-            4 => array($cardnum, 'String'),
-            5 => array($cardexp, 'String'),
-            6 => array("civicrm" . $cid, 'String'),
-        );
-        CRM_Core_DAO::executeQuery(
-            'INSERT INTO civicrm_value_payment_detai_212(entity_id, token_1187, cardnum_1188, cardexp_1189, reference_1190) 
-                   VALUES (%1, %2, %3, %4, %5)', $query_params);
-
-        // Group 213 general_token: civicrm_value_general_token_213
-        //    entity_id: contact ID
-        //    gtoken_1191
-        $query_params = array(
-            1 => array($contribution->contact_id, 'String'),
-            2 => array($token, 'String'),
-        );
-        CRM_Core_DAO::executeQuery(
-            'INSERT INTO civicrm_value_general_token_213(entity_id, gtoken_1191) 
-                   VALUES (%1, %2)', $query_params);
-
         return true;
     }
 
