@@ -100,7 +100,6 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
      */
     public function doDirectPayment(&$params)
     {
-
         if (!empty($this->_doDirectPaymentResult)) {
             $result = $this->_doDirectPaymentResult;
             $result['trxn_id'] = array_shift($this->_doDirectPaymentResult['trxn_id']);
@@ -371,6 +370,15 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter('ConfirmationLink', 'http://www.arvut.org/he/2012-04-14-03-44-47/2021-04-04-07-45-59');
             }
             $pelecard->setParameter("LogoUrl", "https://checkout.arvut.org/arvut_logo.png");
+        } elseif ($nick_name == 'mish') {
+            $pelecard->setParameter("TopText", 'משפחה בחיבור');
+            $pelecard->setParameter("BottomText", '© משפחה בחיבור');
+            $pelecard->setParameter("Language", 'HE');
+            $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
+            $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
+            $pelecard->setParameter('TextOnConfirmationBox', 'אני מסכים עם תנאי השימוש');
+            $pelecard->setParameter('ConfirmationLink', 'http://www.arvut.org/he/2012-04-14-03-44-47/2021-04-04-07-45-59');
+            $pelecard->setParameter("LogoUrl", "https://www.1family.co.il/wp-content/uploads/2019/06/cropped-Screen-Shot-2019-06-16-at-00.12.07-140x82.png");
         }
 
         $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
