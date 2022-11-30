@@ -377,7 +377,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
             $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
             $pelecard->setParameter('TextOnConfirmationBox', 'אני מסכים עם תנאי השימוש');
-            $pelecard->setParameter('ConfirmationLink', 'http://www.arvut.org/he/2012-04-14-03-44-47/2021-04-04-07-45-59');
+            $pelecard->setParameter('ConfirmationLink', 'https://www.1family.co.il/privacy-policy/');
             $pelecard->setParameter("LogoUrl", "https://www.1family.co.il/wp-content/uploads/2019/06/cropped-Screen-Shot-2019-06-16-at-00.12.07-140x82.png");
         }
 
