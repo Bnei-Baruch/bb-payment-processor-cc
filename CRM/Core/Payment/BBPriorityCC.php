@@ -370,7 +370,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
                 $pelecard->setParameter('ConfirmationLink', 'http://www.arvut.org/he/2012-04-14-03-44-47/2021-04-04-07-45-59');
             }
             $pelecard->setParameter("LogoUrl", "https://checkout.arvut.org/arvut_logo.png");
-        } elseif ($nick_name == 'mish') {
+        } elseif ($nick_name == 'meshp18') {
             $pelecard->setParameter("TopText", 'משפחה בחיבור');
             $pelecard->setParameter("BottomText", '© משפחה בחיבור');
             $pelecard->setParameter("Language", 'HE');
