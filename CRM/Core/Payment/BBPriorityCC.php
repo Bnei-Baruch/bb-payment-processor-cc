@@ -396,14 +396,14 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
         // $pelecard->setParameter("Total", 0);
         // $pelecard->setParameter("FreeTotal", true);
         // if ($lang == 'HE') {
-            // $text = "אנא הכנס סכום מתאים";
-            // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-he-1.css");
+        // $text = "אנא הכנס סכום מתאים";
+        // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-he-1.css");
         // } elseif ($lang == 'RU') {
-            // $text = "Введите правильную сумму";
-            // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
+        // $text = "Введите правильную сумму";
+        // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
         // } else {
-            // $text = "Please Select Proper Sum";
-            // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
+        // $text = "Please Select Proper Sum";
+        // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
         // }
         // $pelecard->setCS("cs_free_total", $text);
         if (($params["amount"] * 100) <= 0) {
@@ -426,13 +426,17 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             'return' => "account_type_code",
             'id' => $financial_account_id,
         ));
-        $min_amount = civicrm_api3('FinancialAccount', 'getvalue', array(
-            'return' => "description",
-            'id' => $financial_account_id,
-        ));
+        try {
+            $min_amount = civicrm_api3('FinancialAccount', 'getvalue', array(
+                'return' => "description",
+                'id' => $financial_account_id,
+            ));
+        } catch (Exception $e) {
+            $min_amount = 0;
+        }
         if ((int)$installments == 0) {
             $pelecard->setParameter("MaxPayments", 1);
-        } else if ((int)$installments > 0 && $params["amount"] >= (int)$min_amount){
+        } else if ((int)$installments > 0 && $params["amount"] >= (int)$min_amount) {
             $pelecard->setParameter("MaxPayments", $installments);
         }
         $name = $params['first_name'] . ' ' . $params['last_name'];
