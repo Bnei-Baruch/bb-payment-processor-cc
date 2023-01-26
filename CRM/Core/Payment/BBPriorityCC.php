@@ -426,9 +426,13 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment
             'return' => "account_type_code",
             'id' => $financial_account_id,
         ));
+        $min_amount = civicrm_api3('FinancialAccount', 'getvalue', array(
+            'return' => "description",
+            'id' => $financial_account_id,
+        ));
         if ((int)$installments == 0) {
             $pelecard->setParameter("MaxPayments", 1);
-        } else {
+        } else if ((int)$installments > 0 && $params["amount"] >= (int)$min_amount){
             $pelecard->setParameter("MaxPayments", $installments);
         }
         $name = $params['first_name'] . ' ' . $params['last_name'];
