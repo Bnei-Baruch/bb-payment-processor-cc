@@ -9,12 +9,12 @@
     <email>gshilin@gmail.com</email>
   </maintainer>
   <releaseDate>2017-11-12</releaseDate>
-  <version>1.0</version>
+  <version>2.0</version>
   <develStage>stable</develStage>
   <compatibility>
-    <ver>4.7</ver>
+    <ver>5.74</ver>
   </compatibility>
-  <comments>This is mostly tested module</comments>
+  <comments>This module was updated to 5.74.4</comments>
   <civix>
     <namespace>CRM/BBPriorityCC</namespace>
   </civix>
