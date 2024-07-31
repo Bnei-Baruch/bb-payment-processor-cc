@@ -290,15 +290,15 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
             return false;
         }
 
-        $input['amount'] = $contribution['total_amount'];
-        $valid = $this->_bbpAPI->validateResponse($paymentProcessor, $input, $contribution['id'], $this->errors);
+        $input['amount'] = $contribution->total_amount;
+        $valid = $this->_bbpAPI->validateResponse($paymentProcessor, $input, $contribution->id, $this->errors);
 
         if (!$valid) {
             Civi::log('BBPCC IPN')->debug("Pelecard Response is invalid");
             return false;
         }
 
-        $contribution['txrn_id'] = $valid;
+        $contribution->txrn_id = $valid;
         return true;
     }
 
