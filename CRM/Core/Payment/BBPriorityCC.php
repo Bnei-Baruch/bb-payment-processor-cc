@@ -105,6 +105,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         // Conceivably a processor might override this - perhaps for setting up a token - but we don't
         // have an example of that at the moment.
         if ($params['amount'] == 0) {
+            $result = array();
             $result['payment_status_id'] = array_search('Completed', $statuses);
             $result['payment_status'] = 'Completed';
             return $result;
@@ -130,14 +131,20 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         } else {
             $url = ($component == 'event') ? 'civicrm/event/register' : 'civicrm/contribute/transact';
             $cancel = ($component == 'event') ? '_qf_Register_display' : '_qf_Main_display';
-            $returnURL = CRM_Utils_System::url($url, "_qf_ThankYou_display=1&qfKey={$params['qfKey']}", TRUE, NULL, FALSE);
+            $returnURL = CRM_Utils_System::url($url,
+                "_qf_ThankYou_display=1&qfKey={$params['qfKey']}",
+                TRUE, NULL, FALSE
+            );
 
             $cancelUrlString = "$cancel=1&cancel=1&qfKey={$params['qfKey']}";
-            if ($params['is_recur']) {
+            if ($params['is_recur'] ?? false) {
                 $cancelUrlString .= "&isRecur=1&recurId={$params['contributionRecurID']}&contribId={$params['contributionID']}";
             }
 
-            $cancelURL = CRM_Utils_System::url($url, $cancelUrlString, TRUE, NULL, FALSE);
+            $cancelURL = CRM_Utils_System::url(
+                $url,
+                $cancelUrlString,
+                TRUE, NULL, FALSE);
         }
 
         $merchantUrlParams = "contactID={$params['contactID']}&contributionID={$params['contributionID']}";
@@ -176,25 +183,23 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         $contact_id = civicrm_api3('FinancialAccount', 'getvalue', array('return' => "contact_id", 'id' => $financial_account_id, 'account_relationship' => 1,));
         $nick_name = civicrm_api3('Contact', 'getvalue', array('return' => "nick_name", 'id' => $contact_id, 'account_relationship' => 1,));
 
+        $pelecard->setParameter("Language", $lang);
         if ($nick_name == 'ben2') {
             if ($lang == 'HE') {
                 $pelecard->setParameter("TopText", 'בני ברוך קבלה לעם');
                 $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
-                $pelecard->setParameter("Language", 'HE');
                 $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
                 $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
                 $pelecard->setParameter('TextOnConfirmationBox', 'אני מסכים עם תנאי השימוש');
             } elseif ($lang == 'RU') {
                 $pelecard->setParameter("TopText", 'Бней Барух Каббала лаАм');
                 $pelecard->setParameter("BottomText", '© Бней Барух Каббала лаАм');
-                $pelecard->setParameter("Language", 'RU');
                 $pelecard->setCS('cs_payments', 'Количество платежей (только для жителей Израиля)');
                 $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
                 $pelecard->setParameter('TextOnConfirmationBox', 'Я согласен с условиями обслуживания');
             } else {
                 $pelecard->setParameter("TopText", 'Bnei Baruch Kabbalah laAm');
                 $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
-                $pelecard->setParameter("Language", 'EN');
                 $pelecard->setCS('cs_payments', 'Number of installments (for Israel residents only)');
                 $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
                 $pelecard->setParameter('TextOnConfirmationBox', 'I agree with the terms of service');
@@ -205,21 +210,18 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
             if ($lang == 'HE') {
                 $pelecard->setParameter("TopText", 'תנועת הערבות לאיחוד העם');
                 $pelecard->setParameter("BottomText", '© תנועת הערבות לאיחוד העם');
-                $pelecard->setParameter("Language", 'HE');
                 $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
                 $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
                 $pelecard->setParameter('TextOnConfirmationBox', 'אני מסכים עם תנאי השימוש');
             } elseif ($lang == 'RU') {
                 $pelecard->setParameter("TopText", 'Общественное движение «Арвут»');
                 $pelecard->setParameter("BottomText", '© Общественное движение «Арвут»');
-                $pelecard->setParameter("Language", 'RU');
                 $pelecard->setCS('cs_payments', 'Количество платежей (только для жителей Израиля)');
                 $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
                 $pelecard->setParameter('TextOnConfirmationBox', 'Я согласен с условиями обслуживания');
             } else {
                 $pelecard->setParameter("TopText", 'The Arvut Social Movement');
                 $pelecard->setParameter("BottomText", '© The Arvut Social Movement');
-                $pelecard->setParameter("Language", 'EN');
                 $pelecard->setCS('cs_payments', 'Number of installments (for Israel residents only)');
                 $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
                 $pelecard->setParameter('TextOnConfirmationBox', 'I agree with the terms of service');
@@ -229,10 +231,10 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         } elseif ($nick_name == 'meshp18') {
             $pelecard->setParameter("TopText", 'משפחה בחיבור');
             $pelecard->setParameter("BottomText", '© משפחה בחיבור');
-            $pelecard->setParameter("Language", 'HE');
             $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
             $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
             $pelecard->setParameter('TextOnConfirmationBox', 'אני מסכים עם תנאי השימוש');
+            $pelecard->setParameter("Language", 'HE');
             $pelecard->setParameter('ConfirmationLink', 'https://www.1family.co.il/privacy-policy/');
             $pelecard->setParameter("LogoUrl", "https://www.1family.co.il/wp-content/uploads/2019/06/cropped-Screen-Shot-2019-06-16-at-00.12.07-140x82.png");
         }

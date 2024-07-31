@@ -4,7 +4,6 @@ use Civi\Api4\Contribution;
 
 class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
     const BBP_RESPONSE_CODE_ACCEPTED = '000';
-    private $_errors;
     private $_bbpAPI;
 
     function __construct($inputData) {
@@ -193,20 +192,25 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
 
     function main(&$paymentProcessor, &$input, &$ids): void {
         try {
+            $contributionStatuses = array_flip(CRM_Contribute_BAO_Contribution::buildOptions('contribution_status_id', 'validate'));
             $contributionID = $input['contributionID'];
-            $contribution = $this->getContribution($contributionID);
+            $contactID = self::retrieve('contactID', 'Integer');
+            $contribution = $this->getContribution($contributionID, $contactID);
 
             if ($input['PelecardStatusCode'] != self::BBP_RESPONSE_CODE_ACCEPTED) {
                 Civi::log('BBPCC IPN')->debug("BBPCC IPN Response: About to cancel contribution \n input: " . print_r($input, TRUE) . "\n ids: " . print_r($ids, TRUE));
-                Contribution::update(FALSE)->setValues([
-                    'cancel_date' => 'now',
-                    'contribution_status_id:name' => 'Cancelled',
-                ])->addWhere('id', '=', $contributionID)->execute();
+                $contribution->contribution_status_id = $contributionStatuses['Cancelled'];
+                $contribution->cancel_date = 'now';
+                $contribution->cancel_reason = 'CC failure ' . $input['PelecardStatusCode'];
+                $contribution->save(false);
                 echo 'Contribution aborted due to invalid code received from Pelecard: ' . $input['PelecardStatusCode'];
                 return;
             }
 
-            if ($this->getContributionStatus($contribution) === 'Completed') {
+            $statusID = CRM_Core_DAO::getFieldValue('CRM_Contribute_DAO_Contribution',
+                $contribution->id, 'contribution_status_id'
+            );
+            if ($statusID === $contributionStatuses['Completed']) {
                 Civi::log('BBPCC IPN')->debug('returning since contribution has already been handled');
                 return;
             }
@@ -310,23 +314,15 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
         return $value;
     }
 
-    private function getContribution($contribution_id) {
-        // Check if the contribution exists
-        // make sure contribution exists and is valid
-        $contribution = Contribution::get(FALSE)
-            ->addWhere('id', '=', $contribution_id)
-            ->addSelect('*')
-            ->addSelect('contribution_status_id:name')
-            ->execute()->first();
-        if (empty($contribution)) {
-            $input = $ids = array();
-            throw new CRM_Core_Exception('Failure: Could not find contribution record for ' . $contribution_id, NULL,
-                ['context' => 'Could not find contribution record: ' . $this->getContributionID() . ' in IPN request: ' . print_r($this->getInput($input, $ids), TRUE)]);
+    private function getContribution($contribution_id, $contactID) {
+        $contribution = new CRM_Contribute_BAO_Contribution();
+        $contribution->id = $contribution_id;
+        if (!$contribution->find(TRUE)) {
+            throw new CRM_Core_Exception('Failure: Could not find contribution record for ' . (int) $this->contribution->id, NULL, ['context' => "Could not find contribution record: {$this->contribution->id} in IPN request: "]);
+        }
+        if ((int) $contribution->contact_id !== $contactID) {
+            Civi::log("Contact ID in IPN not found but contact_id found in contribution.");
         }
         return $contribution;
-    }
-
-    private function getContributionStatus($contribution): string {
-        return $contribution['contribution_status_id:name'];
     }
 }
