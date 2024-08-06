@@ -220,12 +220,27 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
                 return;
             }
 
+            // mark payment as Completed (1)
+            self::updateRecord($contributionID, array('contribution_status_id' => $contributionStatuses['Refunded']));
+
             echo("bbpriorityCC IPN success");
             $this->redirectSuccess($input);
             CRM_Utils_System::civiExit();
         } catch (CRM_Core_Exception $e) {
             Civi::log('BBPCC IPN')->debug($e->getMessage());
             echo 'Invalid or missing data';
+        }
+    }
+
+    static function updateRecord($id, $params) {
+        try {
+            $contribution = new CRM_Contribute_BAO_Contribution();
+            $contribution->id = $id;
+            $contribution->create($params);
+        } catch (CRM_Core_Exception $e) {
+            $error = $e->getMessage();
+            Civi::log("Internal error" . $error);
+            throw new CRM_Core_Exception('Failure: Could not update record for ' . (int)$id, NULL, ['context' => "Could not update record: {$id}: "]);
         }
     }
 
