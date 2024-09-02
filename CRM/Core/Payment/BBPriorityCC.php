@@ -113,11 +113,8 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
 
         $params['trxn_id'] = $this->setTrxnId($this->_mode);
         //Total amount is from the form contribution field
-        $amount = $this->_getParam('total_amount');
-        if (empty($amount)) {
-            $amount = $this->_getParam('amount');
-        }
-        if ($params["amount"] < 0) {
+        $amount = $params['total_amount'];
+        if ($amount < 0) {
             throw new PaymentProcessorException(ts('Amount must be positive!!!'), 9004);
         }
         $params['gross_amount'] = $amount;
@@ -183,7 +180,13 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         $contact_id = civicrm_api3('FinancialAccount', 'getvalue', array('return' => "contact_id", 'id' => $financial_account_id, 'account_relationship' => 1,));
         $nick_name = civicrm_api3('Contact', 'getvalue', array('return' => "nick_name", 'id' => $contact_id, 'account_relationship' => 1,));
 
-        $pelecard->setParameter("Language", $lang);
+        if ($lang == 'HE') {
+		$pelecard->setParameter("Language", 'he');
+	} else if ($lang == 'RU') {
+		$pelecard->setParameter("Language", 'ru');
+	} else {
+		$pelecard->setParameter("Language", 'en');
+	}
         if ($nick_name == 'ben2') {
             if ($lang == 'HE') {
                 $pelecard->setParameter("TopText", 'בני ברוך קבלה לעם');
@@ -318,7 +321,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
                 $found[] = $value;
             }
         });
-        return $found[0];
+        return count($found) > 0 ? $found[0] : "";
     }
 
     /**

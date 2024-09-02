@@ -97,7 +97,7 @@ class PelecardAPICC {
     }
 
     /****** Validate Response ******/
-    function validateResponse($processor, $data, $contribution_id, $errors): bool {
+    function validateResponse($processor, $data, $contribution_id, $errors) {
         $PelecardTransactionId = $data['PelecardTransactionId'] . '';
         $PelecardStatusCode = $data['PelecardStatusCode'] . '';
         if ($PelecardStatusCode > 0) {
@@ -110,7 +110,7 @@ class PelecardAPICC {
 
             CRM_Core_Error::debug_log_message("Error: " . $PelecardStatusCode);
             echo "<h1>Error: " . $PelecardStatusCode . ': ' . $errors[$PelecardStatusCode] . "</h1>";
-            return false;
+            return [false, null];
         }
 
         $ConfirmationKey = $data['ConfirmationKey'] . '';
@@ -135,7 +135,7 @@ class PelecardAPICC {
                 'UPDATE civicrm_contribution SET invoice_number = %1, contribution_status_id = 4 WHERE id = %2', $query_params);
 
             CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
-            return false;
+            return [false, null];
         }
 
         $data = $this->getParameter('ResultData');
@@ -175,7 +175,7 @@ class PelecardAPICC {
                 'UPDATE civicrm_contribution SET invoice_number = %1, contribution_status_id = 4 WHERE id = %2', $query_params);
 
             CRM_Core_Error::debug_log_message("Error[{error}]: {message}", ["error" => $error['ErrCode'], "message" => $error['ErrMsg']]);
-            return false;
+            return [false, null];
         }
 
         // Store all parameters in DB
@@ -196,7 +196,7 @@ class PelecardAPICC {
             'INSERT INTO civicrm_bb_payment_responses(trxn_id, cid, cardtype, cardnum, cardexp, firstpay, installments, response, amount, token, is_regular, approval, created_at) 
                    VALUES (%1, %2, %3, %4, %5, %6, %7, %8, %9, %10, 1, %11, NOW())', $query_params);
 
-        return true;
+        return [true, $data];
     }
 
     /******  Base64 Functions  ******/
