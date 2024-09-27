@@ -1,7 +1,7 @@
 {
 	"name": "bbpriority/info.kabbalah.payment.bbpriorityCC",
 	"description": "(BBPCC) BB Priority CC Payment Processor",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"type": "civicrm-ext",
 	"homepage": "https://github.com/Bnei-Baruch/bbpriorityCC",
 	"license": "AGPL-3.0",
