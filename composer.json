@@ -1,5 +1,5 @@
 {
-	"name": "bbpriority/cc",
+	"name": "bbpriority/info.kabbalah.payment.bbpriorityCC",
 	"description": "(BBPCC) BB Priority CC Payment Processor",
 	"version": "2.0.0",
 	"type": "civicrm-ext",

@@ -19,7 +19,6 @@ function bbpriorityCC_civicrm_config(&$config)
  */
 function bbpriorityCC_civicrm_xmlMenu(&$files)
 {
-    _bbpriorityCC_civix_civicrm_xmlMenu($files);
 }
 
 /**
@@ -64,7 +63,6 @@ function bbpriorityCC_civicrm_install()
  */
 function bbpriorityCC_civicrm_postInstall()
 {
-    _bbpriorityCC_civix_civicrm_postInstall();
 }
 
 /**
@@ -89,7 +87,6 @@ function bbpriorityCC_civicrm_uninstall()
         civicrm_api('PaymentProcessorType', 'delete', $params);
     }
 
-    _bbpriorityCC_civix_civicrm_uninstall();
 }
 
 /**
@@ -109,7 +106,6 @@ function bbpriorityCC_civicrm_enable()
  */
 function bbpriorityCC_civicrm_disable()
 {
-    _bbpriorityCC_civix_civicrm_disable();
 }
 
 /**
@@ -119,7 +115,7 @@ function bbpriorityCC_civicrm_disable()
  */
 function bbpriorityCC_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL)
 {
-    return _bbpriorityCC_civix_civicrm_upgrade($op, $queue);
+    return;
 }
 
 /**
@@ -132,7 +128,6 @@ function bbpriorityCC_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL)
  */
 function bbpriorityCC_civicrm_managed(&$entities)
 {
-    _bbpriorityCC_civix_civicrm_managed($entities);
 }
 
 /**
@@ -146,7 +141,6 @@ function bbpriorityCC_civicrm_managed(&$entities)
  */
 function bbpriorityCC_civicrm_caseTypes(&$caseTypes)
 {
-    _bbpriorityCC_civix_civicrm_caseTypes($caseTypes);
 }
 
 /**
@@ -161,7 +155,6 @@ function bbpriorityCC_civicrm_caseTypes(&$caseTypes)
  */
 function bbpriorityCC_civicrm_angularModules(&$angularModules)
 {
-    _bbpriorityCC_civix_civicrm_angularModules($angularModules);
 }
 
 /**
@@ -171,7 +164,6 @@ function bbpriorityCC_civicrm_angularModules(&$angularModules)
  */
 function bbpriorityCC_civicrm_alterSettingsFolders(&$metaDataFolders = NULL)
 {
-    _bbpriorityCC_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
 
 // --- Functions below this ship commented out. Uncomment as required. ---

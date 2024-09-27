@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <extension key="info.kabbalah.payment.bbpriorityCC" type="module">
   <file>bbpriorityCC</file>
   <name>(BBPCC) BB Priority CC Payment Processor</name>
@@ -17,5 +17,14 @@
   <comments>This module was updated to 5.74.4</comments>
   <civix>
     <namespace>CRM/BBPriorityCC</namespace>
+    <format>24.09.1</format>
   </civix>
+  <mixins>
+    <mixin>menu-xml@1.0.0</mixin>
+    <mixin>smarty@1.0.3</mixin>
+  </mixins>
+  <classloader>
+    <psr0 prefix="CRM_" path="."/>
+    <psr4 prefix="Civi\" path="Civi"/>
+  </classloader>
 </extension>
