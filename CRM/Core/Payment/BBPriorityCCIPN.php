@@ -188,6 +188,7 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
         ];
 
         $this->setInputParameters($inputData);
+
         parent::__construct();
     }
 
@@ -239,9 +240,9 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
             ->addValue('contribution_status_id', $status)
             ->execute();
 
-	// update custom fields
+        // update custom fields
         $token = $data['Token'] . '';
-        $cardtype = $data['CreditCardCompanyIssuer']  ? $data['CreditCardCompanyIssuer'] . '' : '';
+        $cardtype = $data['CreditCardCompanyIssuer'] ? $data['CreditCardCompanyIssuer'] . '' : '';
         $cardnum = $data['CreditCardNumber'] ? $data['CreditCardNumber'] . '' : '';
         $cardexp = $data['CreditCardExpDate'] ? $data['CreditCardExpDate'] . '' : '';
 
@@ -269,16 +270,15 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
             'eventID' => $this->retrieve('eventID', 'String', false),
             'participantID' => $this->retrieve('participantID', 'String', false),
             'membershipID' => $this->retrieve('membershipID', 'String', false),
-            'contributionPageID' => $this->retrieve('contributionPageID', 'String', false),
             'relatedContactID' => $this->retrieve('relatedContactID', 'String', false),
             'onBehalfDupeAlert' => $this->retrieve('onBehalfDupeAlert', 'String', false),
             'returnURL' => $this->retrieve('returnURL', 'String', false),
             // POST Parameters
-	    'PelecardTransactionId' => $this->retrieve('PelecardTransactionId', 'String'),
-            'PelecardStatusCode' => $this->retrieve('PelecardStatusCode', 'String'),
-            'Token' => $this->retrieve('Token', 'String'),
-            'ConfirmationKey' => $this->retrieve('ConfirmationKey', 'String'),
-            'UserKey' => $this->retrieve('UserKey', 'String'),
+            'PelecardTransactionId' => $this->retrieve('PelecardTransactionId', 'String', false),
+            'PelecardStatusCode' => $this->retrieve('PelecardStatusCode', 'String', false),
+            'Token' => $this->retrieve('Token', 'String', false),
+            'ConfirmationKey' => $this->retrieve('ConfirmationKey', 'String', false),
+            'UserKey' => $this->retrieve('UserKey', 'String', false),
         );
 
         $ids = array(
