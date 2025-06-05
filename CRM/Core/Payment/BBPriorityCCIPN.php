@@ -2,6 +2,7 @@
 
 use Civi\Api4\Contribution;
 use Civi\Api4\Contact;
+use Civi\Api4\FinancialTrxn;
 
 class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
     const BBP_RESPONSE_CODE_ACCEPTED = '000';
@@ -223,7 +224,7 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
                 return;
             }
 
-            $this->updateContribution($contribution, $contactID, $data, $contributionStatuses['Completed']);
+            $this->updateContribution($contribution, $contactID, $data, $contributionStatuses['Completed'], $paymentProcessor->id);
 
             echo("bbpriorityCC IPN success");
             $this->redirectSuccess($input);
@@ -233,7 +234,7 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
         }
     }
 
-    function updateContribution($contribution, $contactID, $data, $status) {
+    function updateContribution($contribution, $contactID, $data, $status, $paymentProcessorId) {
         // mark payment status
         Contribution::update(false)
             ->addWhere('id', '=', $contribution->id)
@@ -257,7 +258,22 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
             ->addWhere('id', '=', $contactID)
             ->addValue('general_token.gtoken', $token)
             ->execute();
-    }
+
+				// Record financial transaction
+				$toFinancialAccountId = 40001;
+        $ftParams = [
+          'total_amount' => $contribution->total_amount,
+          'contribution_id' => $contribution->id,
+          'trxn_id' => $contribution->trxn_id ?? $contribution->id,
+          'payment_processor_id' => $paymentProcessorId,
+          'status_id:name' => 'Completed',
+					'entity_id' => $contribution->id,
+					'to_financial_account_id' => $contribution->financial_type_id,
+        ];
+				FinancialTrxn::create(false)
+						->setValues($ftParams)
+						->execute();
+		}
 
     function getInput(&$input, &$ids) {
         $input = array(
