@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Language\LanguageInterface;
+use Civi\Api4\FinancialTrxn;
 
 require_once 'CRM/Core/Payment.php';
 require_once 'includes/PelecardAPICC.php';
@@ -72,17 +73,20 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         }
     }
 
-    protected function debugMessage($params) {
-        $debugData = [
-            'timestamp' => date('Y-m-d H:i:s'),
-            'response' => $params,
-        ];
-
-        file_put_contents('/sites/dev.org.kbb1.com/web/sites/default/files/civicrm/ConfigAndLog/refund_debug.log',
-            json_encode($debugData, JSON_PRETTY_PRINT) . "\n",
-            FILE_APPEND | LOCK_EX
-        );
-    }
+		protected function debugMessage($params) {
+			\Drupal::logger('payment_processor')->notice('@timestamp doPayment received: @params', [
+			    '@timestamp' => date('Y-m-d H:i:s'),
+			    '@params' => print_r($params, TRUE)
+			  ]);
+			#$debugData = [
+				#'timestamp' => date('Y-m-d H:i:s'),
+				#'response' => $params,
+			#];
+			#file_put_contents('/sites/dev.org.kbb1.com/web/sites/default/files/civicrm/ConfigAndLog/refund_debug.log', 
+				#json_encode($debugData, JSON_PRETTY_PRINT) . "\n", 
+				#FILE_APPEND | LOCK_EX
+			#); 
+	  }
 
     /**
      * Process a refund transaction
@@ -101,143 +105,148 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
      *   - payment_status_id: A status ID for the payment (if applicable)
      */
     function doRefund(&$params) {
-        // Required parameters
-        if (empty($params['contribution_id'])) {
-            return [
-                'success' => false,
-                'message' => 'Missing required parameter: contribution_id',
-            ];
-        }
-
-        if (!isset($params['total_amount'])) {
-            return [
-                'success' => false,
-                'message' => 'Missing required parameter: total_amount',
-            ];
-        }
-
-        // Get the original contribution
-        try {
-            $original = civicrm_api3('Contribution', 'getsingle', [
-                'id' => $params['contribution_id'],
-            ]);
-        } catch (CiviCRM_API3_Exception $e) {
-            return [
-                'success' => false,
-                'message' => 'Could not find original contribution: ' . $e->getMessage(),
-            ];
-        }
-
-        // Validate the refund amount
-        $total_amount = $params['total_amount'];
-        if ($total_amount <= 0) {
-            return [
-                'success' => false,
-                'message' => 'Refund amount must be greater than zero',
-            ];
-        }
-
-        if ($total_amount > $original['total_amount']) {
-            return [
-                'success' => false,
-                'message' => 'Refund amount cannot exceed the original contribution amount',
-            ];
-        }
-
-        // Get refund reason
-        $refundSource = !empty($params['source']) ? 'Refund ' . $params['source'] : 'Refund';
-
-        $contactId = $original['contact_id'];
-        $originalId = $original['id'];
-
-        // Get token from Contributions custom group or Customer custom group
-        $ctoken = $this->getCToken($originalId);
-        $gtoken = $this->getGToken($contactId);
-        if ($ctoken == "" && $gtoken == "") {
-            return [
-                'success' => false,
-                'message' => 'Unable to refund without any token'
-            ];
-        }
-        $success = false;
-        $refundTrxnId = null;
-
-        // Refund using ctoken or gtoken
-        // This should create a new contribution
-        $success = false;
-        try {
-            $total_amount = -$total_amount;
-
-            // Create Pending contribution
-            $creditCard = \Civi\Api4\OptionValue::get()
-                ->addSelect('value')
-                ->addWhere('option_group_id:name', '=', 'payment_instrument')
-                ->addWhere('name', '=', 'Credit Card')
-                ->execute()
-                ->first();
-            $creditCardId = $creditCard['value'];
-
-            $refund = \Civi\Api4\Contribution::create(false)
-                ->setValues([
-                    'contact_id' => $contactId,
-                    'total_amount' => $total_amount,
-                    'source' => $refundSource,
-                    'cancel_reason' => 'Refund ' . $originalId,
-                    'receive_date' => date('Y-m-d H:i:s'),
-                    'contribution_status_id:name' => 'Pending',
-                    'payment_instrument_id' => $creditCardId,
-                    'financial_type_id' => $params['financial_type_id'],
-                ])
-                ->execute()[0];
-            $contributionId = $refund['id'];
-            $currencyId = $params['currencyID'];
-
-            if ($ctoken) {
-                $token = $ctoken;
-                $response = $this->payByToken($ctoken, $total_amount, $currencyId, $contributionId);
-                if (!$response['success'] && $gtoken && $gtoken !== $ctoken) {
-                    $token = $gtoken;
-                    $response = $this->payByToken($gtoken, $total_amount, $currencyId, $contributionId);
-                }
-            }
-            if ($response['success']) {
-                $success = true;
-                $message = "Refund processed successfully";
-
-                // Update contribution status to Completed + fill in data from $response
-                $refundTrxnId = $response['PelecardTransactionId'] ?? 'refund_' . time();
-
-                \Civi\Api4\Contribution::update(false)
-                    ->addWhere('id', '=', $contributionId)
-                    ->addValue('contribution_status_id:name', 'Completed')
-                    ->execute();
-            } else {
-                $refundTrxnId = 'refund_' . time();
-                $message = "Refund failed: " . $response['status_code'] . " " . $response['error_message'];
-            }
-        } catch (Exception $e) {
-            $message = "Error processing refund: " . $e->getMessage();
-        }
-
-        // Result
+      // Required parameters
+      if (empty($params['contribution_id'])) {
         return [
-            'success' => $success,
-            'message' => $message,
-            'trxn_id' => $refundTrxnId,
+          'success' => false,
+          'message' => 'Missing required parameter: contribution_id',
         ];
+      }
+
+      if (!isset($params['total_amount'])) {
+        return [
+          'success' => false,
+          'message' => 'Missing required parameter: total_amount',
+        ];
+      }
+
+      // Get the original contribution
+      try {
+        $original = civicrm_api3('Contribution', 'getsingle', [
+          'id' => $params['contribution_id'],
+        ]);
+      }
+      catch (CiviCRM_API3_Exception $e) {
+        return [
+          'success' => false,
+          'message' => 'Could not find original contribution: ' . $e->getMessage(),
+        ];
+      }
+
+      // Validate the refund amount
+	$total_amount = $params['total_amount'];
+      if ($total_amount <= 0) {
+        return [
+          'success' => false,
+          'message' => 'Refund amount must be greater than zero',
+        ];
+      }
+  
+      if ($total_amount > $original['total_amount']) {
+        return [
+          'success' => false,
+          'message' => 'Refund amount cannot exceed the original contribution amount',
+        ];
+      }
+
+      // Get refund reason
+      $refundSource = !empty($params['source']) ? 'Refund ' . $params['source'] : 'Refund';
+  
+	$contactId = $original['contact_id'];
+	$originalId = $original['id'];
+	$currencyId = $original['currency'];
+
+      // Get token from Contributions custom group or Customer custom group
+      $ctoken = $this->getCToken($originalId);
+      $gtoken = $this->getGToken($contactId);
+      if ($ctoken == "" && $gtoken == "") {
+        return [
+          'success' => false,
+          'message' => 'Unable to refund without any token'
+        ];
+      }
+      $success = false;
+      $refundTrxnId = null;
+
+      // Refund using ctoken or gtoken
+	// This should create a new contribution
+      try {
+				$total_amount = -$total_amount;
+
+				// Create Pending contribution
+				$creditCard = \Civi\Api4\OptionValue::get(false)
+					->addSelect('value')
+					->addWhere('option_group_id:name', '=', 'payment_instrument')
+					->addWhere('name', '=', 'Credit Card')
+					->execute()
+					->first();
+				$creditCardId = $creditCard['value'];
+
+				$refund = \Civi\Api4\Contribution::create(false)
+					->setValues([
+						'contact_id' => $contactId,
+						'total_amount' => $total_amount,
+						'currency' => $currencyId,
+						'source' => $refundSource,
+						'cancel_reason' => 'Refund ' . $originalId,
+						'receive_date' => date('Y-m-d H:i:s'),
+						'contribution_status_id:name' => 'Pending',
+						'payment_instrument_id' => $creditCardId,
+						'financial_type_id' => $params['financial_type_id'],
+					])
+					->execute()[0];
+				$contributionId = $refund['id'];
+
+        $trxn_id = $this->setTrxnId($this->_mode);
+        $financialTypeID = self::array_column_recursive_first($params, "financialTypeID");
+        if (empty($financialTypeID)) {
+            $financialTypeID = self::array_column_recursive_first($params, "financial_type_id");
+        }
+        $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array('return' => "financial_account_id", 'entity_id' => $financialTypeID, 'account_relationship' => 1,));
+	$this->createFinancialTrxn($contributionId, $total_amount, $trxn_id, $this->_paymentProcessor["id"] , $financial_account_id, $currencyId);
+
+	if ($ctoken) {
+		$response = $this->payByToken($ctoken, $total_amount, $currencyId, $contributionId);
+	}
+	if (!$response['success'] && $gtoken && $gtoken !== $ctoken) {
+		$response = $this->payByToken($gtoken, $total_amount, $currencyId, $contributionId);
+	}
+        if ($response['success']) {
+          $success = true;
+          $message = "Refund processed successfully";
+
+					// Update contribution status to Completed + fill in data from $response
+          $refundTrxnId = $response['PelecardTransactionId'] ?? 'refund_' . time();
+	\Civi\Api4\Contribution::update(false)
+		->addWhere('id', '=', $contributionId)
+		->addValue('contribution_status_id:name', 'Completed')
+		->execute();
+        } else {
+          $refundTrxnId = 'refund_' . time();
+          $message = "Refund failed: " . $response['status_code'] . " " . $response['error_message'];
+        }
+      } catch (Exception $e) {
+        $message = "Error processing refund: " . $e->getMessage();
+      }
+  
+      // Result
+      return [
+        'success' => $success,
+        'message' => $message,
+        'trxn_id' => $refundTrxnId,
+      ];
     }
 
-    /* DEBUG
-   echo "<pre>";
-   var_dump($this->_paymentProcessor);
-   var_dump($params);
-   echo "</pre>";
-   http_build_query();
-   exit();
-   echo static::formatBacktrace(debug_backtrace());
-*/
+		/* DEBUG
+       echo "<pre>";
+       var_dump($this->_paymentProcessor);
+       var_dump($params);
+       echo "</pre>";
+       http_build_query();
+       exit();
+       echo static::formatBacktrace(debug_backtrace());
+    */
     function doPayment(&$params, $component = 'contribute') {
-
         if ($component != 'contribute' && $component != 'event') {
             Civi::log()->error('bbprioritycc_payment_exception',
                 ['context' => [
@@ -255,6 +264,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
 
         $invoiceID = $this->_getParam('invoiceID');
         $contributionID = $params['contributionID'] ?? NULL;
+	$contactID = $params['contactID'];
         if ($this->checkDupe($invoiceID, $contributionID)) {
             throw new PaymentProcessorException('It appears that this transaction is a duplicate.  Have you already submitted the form once?  If so there may have been a connection problem.  Check your email for a receipt.  If you do not receive a receipt within 2 hours you can try your transaction again.  If you continue to have problems please contact the site administrator.', 9004);
         }
@@ -279,9 +289,9 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         // Add a fee_amount so we can be sure fees are handled properly in underlying classes.
         $params['fee_amount'] = 1.50;
         $params['net_amount'] = $params['gross_amount'] - $params['fee_amount'];
-
+        
         if (array_key_exists('successURL', $params)) {
-            // webform
+	    // webform
             $returnURL = $params['successURL'];
             $cancelURL = $params['cancelURL'];
         } else {
@@ -294,7 +304,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
 
             $cancelUrlString = "$cancel=1&cancel=1&qfKey={$params['qfKey']}";
             if ($params['is_recur'] ?? false) {
-                $cancelUrlString .= "&isRecur=1&recurId={$params['contributionRecurID']}&contribId={$params['contributionID']}";
+                $cancelUrlString .= "&isRecur=1&recurId={$params['contributionRecurID']}&contribId={$contributionID}";
             }
 
             $cancelURL = CRM_Utils_System::url(
@@ -303,7 +313,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
                 TRUE, NULL, FALSE);
         }
 
-        $merchantUrlParams = "contactID={$params['contactID']}&contributionID={$params['contributionID']}";
+        $merchantUrlParams = "contactID={$contactID}&contributionID={$contributionID}";
         if ($component == 'event') {
             $merchantUrlParams .= "&eventID={$params['eventID']}&participantID={$params['participantID']}";
         } else {
@@ -326,6 +336,9 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
             }
         }
 
+	$this->updateActivitiesViaContribution($contributionID, $contactID);
+	$this->updateActivitiesViaPendingActivities($contributionID, $contactID);
+
         $pelecard = new PelecardAPICC;
         $merchantUrl = $base_url . 'civicrm/payment/ipn?processor_id=' . $this->_paymentProcessor["id"] . '&mode=' . $this->_mode
             . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
@@ -338,6 +351,21 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array('return' => "financial_account_id", 'entity_id' => $financialTypeID, 'account_relationship' => 1,));
         $contact_id = civicrm_api3('FinancialAccount', 'getvalue', array('return' => "contact_id", 'id' => $financial_account_id, 'account_relationship' => 1,));
         $nick_name = civicrm_api3('Contact', 'getvalue', array('return' => "nick_name", 'id' => $contact_id, 'account_relationship' => 1,));
+
+        $currencyName = $params['custom_1706'] ?? $params['currencyID'];
+        if ($currencyName == "EUR") {
+            $currency = 978;
+        } elseif ($currencyName == "USD") {
+            $currency = 2;
+        } else { // ILS -- default
+            $currency = 1;
+        }
+	\Civi\Api4\Contribution::update(false)
+		->addWhere('id', '=', $contributionID)
+		->addValue('currency', $currencyName)
+		->execute();
+
+	$this->createFinancialTrxn($contributionID, $amount, $params['trxn_id'], $this->_paymentProcessor["id"] , $financial_account_id, $currencyName);
 
         if ($lang == 'HE') {
             $pelecard->setParameter("Language", 'he');
@@ -427,13 +455,6 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         // }
         // $pelecard->setCS("cs_free_total", $text);
         $pelecard->setParameter("Total", $params["amount"] * 100);
-        if ($params["currencyID"] == "EUR") {
-            $currency = 978;
-        } elseif ($params["currencyID"] == "USD") {
-            $currency = 2;
-        } else { // ILS -- default
-            $currency = 1;
-        }
         $pelecard->setParameter("Currency", $currency);
         $pelecard->setParameter("MinPayments", 1);
 
@@ -514,71 +535,160 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
     }
 
     function getGToken($contact_id) {
-        return $this->getToken($contact_id, 'Contact', 'general_token', 'gtoken');
+      return $this->getToken($contact_id, 'Contact', 'general_token', 'gtoken');
     }
 
     function getCToken($contribution_id) {
-        return $this->getToken($contribution_id, 'Contribution', 'Payment_details', 'token');
+      return $this->getToken($contribution_id, 'Contribution', 'Payment_details', 'token');
     }
 
     function getToken($entity_id, $entity, $group_name, $field_name) {
-        $token = "";
+      $token = "";
 
-        try {
-            // First, we need to get the custom field ID
-            $customField = civicrm_api3('CustomField', 'get', [
-                'sequential' => 1,
-                'custom_group_id' => $group_name,
-                'name' => $field_name,
-            ]);
-
-            if ($customField['count'] > 0) {
-                $customFieldId = $customField['values'][0]['id'];
-
-                // Now get the entity with the custom field explicitly requested
-                $result = civicrm_api3($entity, 'get', [
-                    'return' => ["custom_$customFieldId"],
-                    'id' => $entity_id,
-                ]);
-
-                if (!empty($result['values'][$entity_id]["custom_$customFieldId"])) {
-                    $token = $result['values'][$entity_id]["custom_$customFieldId"];
-                }
-            }
-        } catch (CiviCRM_API3_Exception $e) {
+      try {
+        // First, we need to get the custom field ID
+        $customField = civicrm_api3('CustomField', 'get', [
+          'sequential' => 1,
+          'custom_group_id' => $group_name,
+          'name' => $field_name,
+        ]);
+    
+        if ($customField['count'] > 0) {
+          $customFieldId = $customField['values'][0]['id'];
+      
+          // Now get the entity with the custom field explicitly requested
+          $result = civicrm_api3($entity, 'get', [
+            'return' => ["custom_$customFieldId"],
+            'id' => $entity_id,
+          ]);
+      
+          if (!empty($result['values'][$entity_id]["custom_$customFieldId"])) {
+            $token = $result['values'][$entity_id]["custom_$customFieldId"];
+          }
         }
-        return $token;
+      } catch (CiviCRM_API3_Exception $e) {
+      }
+      return $token;
     }
 
-    protected function payByToken($token, $amount, $currencyID, $contributionId) {
-        $pelecard = new PelecardAPICC;
-        $pelecard->setParameter("terminalNumber", $this->_paymentProcessor["signature"]);
-        $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
-        $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
+		protected function payByToken($token, $amount, $currencyID, $contributionId) {
+			$pelecard = new PelecardAPICC;
+			$pelecard->setParameter("terminalNumber", $this->_paymentProcessor["signature"]);
+			$pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
+			$pelecard->setParameter("password", $this->_paymentProcessor["password"]);
 
-        $pelecard->setParameter("ActionType", 'J4'); // Debit action
-        $pelecard->setParameter("ShopNo", "100");
-        $pelecard->setParameter("token", $token);
-        $pelecard->setParameter("ParamX", 'civicrm-' . $contributionId);
-        $pelecard->setParameter("total", $amount * 100);
+			$pelecard->setParameter("ActionType", 'J4'); // Debit action
+			$pelecard->setParameter("ShopNo", "100");
+			$pelecard->setParameter("token", $token);
+			$pelecard->setParameter("ParamX", 'civicrm-' . $contributionId);
+			$pelecard->setParameter("total", $amount * 100);
 
-        if ($currencyID == "EUR") {
-            $currency = 978;
-        } elseif ($currencyID == "USD") {
-            $currency = 2;
-        } else { // ILS -- default
-            $currency = 1;
-        }
-        $pelecard->setParameter("Currency", $currency);
-        $result = $pelecard->singlePayment();
-        if (!$result['success']) {
-            $response['success'] = false;
-            $response['code'] = $result['code'];
-            $response['error_message'] = $result['error_message'];
-            return $response;
-        }
-        $response['success'] = true;
-        $response['PelecardTransactionId'] = $result['PelecardTransactionId'];
-        return $response;
+			if ($currencyID == "EUR") {
+					$currency = 978;
+			} elseif ($currencyID == "USD") {
+					$currency = 2;
+			} else { // ILS -- default
+					$currency = 1;
+			}
+			$pelecard->setParameter("Currency", $currency);
+			$result = $pelecard->singlePayment();
+			if (!$result['success']) {
+				$response['success'] = false;
+				$response['code'] = $result['code'];
+				$response['error_message'] = $result['error_message'];
+				return $response;
+			}
+			$response['success'] = true;
+      $response['PelecardTransactionId'] = $result['PelecardTransactionId'];
+			return $response;
+		}
+
+    // for meals
+    private function updateActivitiesViaContribution($contributionID, $contactID) {
+	     try {
+		$contributions = \Civi\Api4\Contribution::get(false)
+			->addSelect('maser.note') // Get all standard and custom fields
+			->addWhere('id', '=', $contributionID)
+			->addWhere('contact_id', '=', $contactID)
+			->execute();
+		    
+		if (count($contributions) === 0) {
+		    return;
+		}
+		$note = $contributions[0]['maser.note'] ?? '';
+		$ids = (strpos($note, 'Activities:') === 0) 
+		    ? explode(',', substr($note, 11)) 
+		    : [];
+		if (empty($ids)) {
+			return;
+		}
+		$activityIds = array_map('intval', $ids);
+		try {
+			// Update status_id and custom field for all activities
+			$result = \Civi\Api4\Activity::update(false)
+			    ->addWhere('id', 'IN', $activityIds)
+			    ->addValue('status_id', 2)
+			    ->addValue('Registration_for_meals.ID_for_the_payment', $contributionID)
+			    ->execute();
+		} catch (Exception $e) {
+			// Ignore error
+		}
+	    } catch (Exception $e) {
+		// Ignore error
+	    }
     }
+    
+    // For events
+    private function updateActivitiesViaPendingActivities($contributionID, $contactID) {
+     try {
+	// get activity
+	$today = date('d-m-Y 00:00');
+	$activities = \Civi\Api4\Activity::get(false)
+	    ->addSelect('id')
+	    ->addJoin('ActivityContact AS ac', 'INNER', ['id', '=', 'ac.activity_id'])
+	    ->addWhere('status_id', '=', '17')
+	    ->addWhere('activity_type_id', '=', '182')
+	    ->addWhere('activity_date_time', '>=', $today)
+	    ->addOrderBy('id', 'DESC')
+	    ->setLimit(1)
+	    ->execute();
+	if (count($activities) === 0) {
+	    return;
+	}
+        $activity = $activities[0];
+
+	// Update contribution with Activities:...
+	\Civi\Api4\Contribution::update(false)
+		->addWhere('id', '=', $contributionID)
+		->addValue('maser.note', "Activities:" . $activity['id'])
+		->execute();
+
+	// Update activities with contributionID
+	$result = \Civi\Api4\Activity::update(false)
+	    ->addWhere('id', '=', $activity['id'])
+	    ->setDebug(true)
+	    ->addValue('status_id', 2)
+	    ->addValue('Registration_for_event.id_for_payment', $contributionID)
+	    ->execute();
+    } catch (Exception $e) {
+        // Ignore error
+    }
+  }
+
+  // Record financial transaction
+  private function createFinancialTrxn($contributionID, $totalAmount, $trxn_id, $paymentProcessorID, $financialAccountID, $currency) {
+        $ftParams = [
+          'total_amount' => $totalAmount,
+          'contribution_id' => $contributionID,
+	  'entity_id' => $contributionID,
+          'trxn_id' => $trxn_id ?? $contributionID,
+          'payment_processor_id' => $paymentProcessorID,
+	  'currency' => $currency,
+          'status_id:name' => 'Completed',
+	  'to_financial_account_id' => $financialAccountID,
+        ];
+	FinancialTrxn::create(false)
+		->setValues($ftParams)
+		->execute();
+  }
 }
