@@ -2,7 +2,6 @@
 
 use Civi\Api4\Contribution;
 use Civi\Api4\Contact;
-use Civi\Api4\FinancialTrxn;
 
 class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
     const BBP_RESPONSE_CODE_ACCEPTED = '000';
@@ -257,21 +256,6 @@ class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
         Contact::update(false)
             ->addWhere('id', '=', $contactID)
             ->addValue('general_token.gtoken', $token)
-            ->execute();
-
-        // Record financial transaction
-        $toFinancialAccountId = 40001;
-        $ftParams = [
-            'total_amount' => $contribution->total_amount,
-            'contribution_id' => $contribution->id,
-            'trxn_id' => $contribution->trxn_id ?? $contribution->id,
-            'payment_processor_id' => $paymentProcessorId,
-            'status_id:name' => 'Completed',
-            'entity_id' => $contribution->id,
-            'to_financial_account_id' => $contribution->financial_type_id,
-        ];
-        FinancialTrxn::create(false)
-            ->setValues($ftParams)
             ->execute();
     }
 
