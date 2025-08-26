@@ -6,6 +6,7 @@ use Civi\Api4\Contact;
 class CRM_Core_Payment_BBPriorityCCIPN extends CRM_Core_Payment_BaseIPN {
     const BBP_RESPONSE_CODE_ACCEPTED = '000';
     private $_bbpAPI;
+    private $errors;
 
     function __construct($inputData) {
         $this->_bbpAPI = new PelecardAPICC;

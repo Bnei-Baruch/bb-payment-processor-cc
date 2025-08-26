@@ -396,28 +396,6 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
             }
             $pelecard->setParameter('ConfirmationLink', 'https://checkout.kabbalah.info/legacy-statement-crm-en.html');
             $pelecard->setParameter("LogoUrl", "https://checkout.kabbalah.info/logo1.png");
-        } elseif ($nick_name == 'arvut2') {
-            if ($lang == 'HE') {
-                $pelecard->setParameter("TopText", 'תנועת הערבות לאיחוד העם');
-                $pelecard->setParameter("BottomText", '© תנועת הערבות לאיחוד העם');
-                $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
-                $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
-                $pelecard->setParameter('TextOnConfirmationBox', 'אני מסכים עם תנאי השימוש');
-            } elseif ($lang == 'RU') {
-                $pelecard->setParameter("TopText", 'Общественное движение «Арвут»');
-                $pelecard->setParameter("BottomText", '© Общественное движение «Арвут»');
-                $pelecard->setCS('cs_payments', 'Количество платежей (только для жителей Израиля)');
-                $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
-                $pelecard->setParameter('TextOnConfirmationBox', 'Я согласен с условиями обслуживания');
-            } else {
-                $pelecard->setParameter("TopText", 'The Arvut Social Movement');
-                $pelecard->setParameter("BottomText", '© The Arvut Social Movement');
-                $pelecard->setCS('cs_payments', 'Number of installments (for Israel residents only)');
-                $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
-                $pelecard->setParameter('TextOnConfirmationBox', 'I agree with the terms of service');
-            }
-            $pelecard->setParameter('ConfirmationLink', 'https://www.arvut.org/he/2012-04-14-03-44-47/2021-04-04-07-45-59');
-            $pelecard->setParameter("LogoUrl", "https://checkout.arvut.org/arvut_logo.png");
         } elseif ($nick_name == 'meshp18') {
             $pelecard->setParameter("TopText", 'משפחה בחיבור');
             $pelecard->setParameter("BottomText", '© משפחה בחיבור');
