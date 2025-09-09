@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS civicrm_bb_payment_responses (
   amount       DECIMAL(20, 2)           DEFAULT NULL          COMMENT 'Total payment amount',
   token        VARCHAR(255)             DEFAULT NULL          COMMENT 'Token from Pelecard',
   created_at   DATETIME                                       COMMENT 'Date Time of Response',
+  updated_at   DATETIME                                       COMMENT 'Date Time of Payment',
 
   PRIMARY KEY (id),
   KEY (`cid`)
