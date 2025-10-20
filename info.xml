@@ -9,7 +9,7 @@
     <email>gshilin@gmail.com</email>
   </maintainer>
   <releaseDate>2024-09-02</releaseDate>
-  <version>2.1</version>
+  <version>3.0</version>
   <develStage>stable</develStage>
   <compatibility>
     <ver>5.74</ver>
@@ -27,4 +27,7 @@
     <psr0 prefix="CRM_" path="."/>
     <psr4 prefix="Civi\" path="Civi"/>
   </classloader>
+  <requires>
+    <ext>bb-pelecard-sdk</ext>
+  </requires>
 </extension>

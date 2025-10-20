@@ -7,9 +7,17 @@
 
 use Drupal\Core\Language\LanguageInterface;
 use Civi\Api4\FinancialTrxn;
+use Civi\Api4\Contribution;
+use Civi\Api4\EntityFinancialAccount;
+use Civi\Api4\FinancialAccount;
+use Civi\Api4\Contact;
+use Civi\Api4\CustomField;
+use Civi\Api4\PaymentProcessorType;
+use Civi\Api4\PaymentProcessor;
+use CRM\BBPelecard\API\PelecardCC;
+use CRM\BBPelecard\Utils\ErrorCodes;
 
 require_once 'CRM/Core/Payment.php';
-require_once 'includes/PelecardAPICC.php';
 require_once 'BBPriorityCCIPN.php';
 
 /**
@@ -41,7 +49,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         $query = "SELECT MAX(trxn_id) AS trxn_id FROM civicrm_contribution WHERE trxn_id LIKE '{$mode}_%' LIMIT 1";
         $tid = CRM_Core_Dao::executeQuery($query);
         if (!$tid->fetch()) {
-            throw new CRM_Core_Exception('Could not find contribution max id');
+            throw new Exception('Could not find contribution max id');
         }
         $trxn_id = strval($tid->trxn_id);
         $trxn_id = str_replace("{$mode}_", '', $trxn_id);
@@ -57,7 +65,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
      *   the error message if any
      */
     public function checkConfig(): ?string {
-        $error = array();
+        $error = [];
 
         if (empty($this->_paymentProcessor["user_name"])) {
             $error[] = ts("Merchant Name is not set in the BBPCC Payment Processor settings.");
@@ -78,166 +86,116 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
 			    '@timestamp' => date('Y-m-d H:i:s'),
 			    '@params' => print_r($params, TRUE)
 			  ]);
+
+			// Debug code for reference:
 			#$debugData = [
 				#'timestamp' => date('Y-m-d H:i:s'),
 				#'response' => $params,
 			#];
-			#file_put_contents('/sites/dev.org.kbb1.com/web/sites/default/files/civicrm/ConfigAndLog/refund_debug.log', 
-				#json_encode($debugData, JSON_PRETTY_PRINT) . "\n", 
+			#file_put_contents('/sites/dev.org.kbb1.com/web/sites/default/files/civicrm/ConfigAndLog/refund_debug.log',
+				#json_encode($debugData, JSON_PRETTY_PRINT) . "\n",
 				#FILE_APPEND | LOCK_EX
-			#); 
+			#);
 	  }
 
-    /**
-     * Process a refund transaction
-     *
-     * @param array $params
-     *   Contains:
-     *   - contribution_id: The ID of the contribution being refunded
-     *   - total_amount: The amount to be refunded
-     *   - trxn_id: The transaction ID of the original payment (if available)
-     *   - refund_reason: The reason for the refund
-     *
-     * @return array
-     *   The result of the refund operation:
-     *   - success: TRUE if refund processed successfully, FALSE otherwise
-     *   - message: A descriptive message about the result
-     *   - payment_status_id: A status ID for the payment (if applicable)
-     */
-    function doRefund(&$params) {
-      // Required parameters
-      if (empty($params['contribution_id'])) {
-        return [
-          'success' => false,
-          'message' => 'Missing required parameter: contribution_id',
-        ];
-      }
+    public function doRefund(array $params): array {
+    $original = CRM_Core_BAO_FinancialTrxn::getOriginalTrxnAndParams($params['contribution_id']);
+    if (empty($original['trxn'])) {
+      return [
+        'success' => false,
+        'message' => 'Unable to find original transaction'
+      ];
+    }
 
-      if (!isset($params['total_amount'])) {
-        return [
-          'success' => false,
-          'message' => 'Missing required parameter: total_amount',
-        ];
-      }
+    $total_amount = $params['amount'];
 
-      // Get the original contribution
-      try {
-        $original = civicrm_api3('Contribution', 'getsingle', [
-          'id' => $params['contribution_id'],
-        ]);
-      }
-      catch (CiviCRM_API3_Exception $e) {
-        return [
-          'success' => false,
-          'message' => 'Could not find original contribution: ' . $e->getMessage(),
-        ];
-      }
+    // Get refund reason
+    $refundSource = !empty($params['source']) ? 'Refund ' . $params['source'] : 'Refund';
 
-      // Validate the refund amount
-	$total_amount = $params['total_amount'];
-      if ($total_amount <= 0) {
-        return [
-          'success' => false,
-          'message' => 'Refund amount must be greater than zero',
-        ];
-      }
-  
-      if ($total_amount > $original['total_amount']) {
-        return [
-          'success' => false,
-          'message' => 'Refund amount cannot exceed the original contribution amount',
-        ];
-      }
-
-      // Get refund reason
-      $refundSource = !empty($params['source']) ? 'Refund ' . $params['source'] : 'Refund';
-  
 	$contactId = $original['contact_id'];
 	$originalId = $original['id'];
 	$currencyId = $original['currency'];
 
-      // Get token from Contributions custom group or Customer custom group
-      $ctoken = $this->getCToken($originalId);
-      $gtoken = $this->getGToken($contactId);
-      if ($ctoken == "" && $gtoken == "") {
-        return [
-          'success' => false,
-          'message' => 'Unable to refund without any token'
-        ];
-      }
-      $success = false;
-      $refundTrxnId = null;
+    // Get token from Contributions custom group or Customer custom group
+    $ctoken = $this->getToken($originalId, 'Contribution', 'Payment_details', 'token');
+    $gtoken = $this->getToken($contactId, 'Contact', 'general_token', 'gtoken');
+    if ($ctoken == "" && $gtoken == "") {
+      return [
+        'success' => false,
+        'message' => 'Unable to refund without any token'
+      ];
+    }
+    $success = false;
+    $refundTrxnId = null;
 
-      // Refund using ctoken or gtoken
+    // Refund using ctoken or gtoken
 	// This should create a new contribution
-      try {
-				$total_amount = -$total_amount;
+    try {
+			$total_amount = -$total_amount;
 
-				// Create Pending contribution
-				$creditCard = \Civi\Api4\OptionValue::get(false)
-					->addSelect('value')
-					->addWhere('option_group_id:name', '=', 'payment_instrument')
-					->addWhere('name', '=', 'Credit Card')
-					->execute()
-					->first();
-				$creditCardId = $creditCard['value'];
+			// Create Pending contribution
+			$creditCard = \Civi\Api4\OptionValue::get(false)
+				->addSelect('value')
+				->addWhere('option_group_id:name', '=', 'payment_instrument')
+				->addWhere('name', '=', self::PAYMENT_INSTRUMENT_CREDIT_CARD)
+				->execute()
+				->first();
+			$creditCardId = $creditCard['value'];
 
-				$refund = \Civi\Api4\Contribution::create(false)
-					->setValues([
-						'contact_id' => $contactId,
-						'total_amount' => $total_amount,
-						'currency' => $currencyId,
-						'source' => $refundSource,
-						'cancel_reason' => 'Refund ' . $originalId,
-						'receive_date' => date('Y-m-d H:i:s'),
-						'contribution_status_id:name' => 'Pending',
-						'payment_instrument_id' => $creditCardId,
-						'financial_type_id' => $params['financial_type_id'],
-					])
-					->execute()[0];
-				$contributionId = $refund['id'];
+			$refund = \Civi\Api4\Contribution::create(false)
+				->setValues([
+					'contact_id' => $contactId,
+					'total_amount' => $total_amount,
+					'currency' => $currencyId,
+					'source' => $refundSource,
+					'cancel_reason' => 'Refund ' . $originalId,
+					'receive_date' => date('Y-m-d H:i:s'),
+					'contribution_status_id:name' => self::PAYMENT_STATUS_PENDING,
+					'payment_instrument_id' => $creditCardId,
+					'financial_type_id' => $params['financial_type_id'],
+				])
+				->execute()[0];
+			$contributionId = $refund['id'];
 
-        $trxn_id = $this->setTrxnId($this->_mode);
-        $financialTypeID = self::array_column_recursive_first($params, "financialTypeID");
-        if (empty($financialTypeID)) {
-            $financialTypeID = self::array_column_recursive_first($params, "financial_type_id");
-        }
-        $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array('return' => "financial_account_id", 'entity_id' => $financialTypeID, 'account_relationship' => 1,));
+      $trxn_id = $this->setTrxnId($this->_mode);
+      $financialTypeID = $this->getFinancialTypeId($params);
+      $financial_account_id = $this->getFinancialAccountId($financialTypeID);
 	$this->createFinancialTrxn($contributionId, $total_amount, $trxn_id, $this->_paymentProcessor["id"] , $financial_account_id, $currencyId);
 
+	$response = ['success' => false];
 	if ($ctoken) {
 		$response = $this->payByToken($ctoken, $total_amount, $currencyId, $contributionId);
 	}
 	if (!$response['success'] && $gtoken && $gtoken !== $ctoken) {
 		$response = $this->payByToken($gtoken, $total_amount, $currencyId, $contributionId);
 	}
-        if ($response['success']) {
-          $success = true;
-          $message = "Refund processed successfully";
+      if ($response['success']) {
+        $success = true;
+        $message = "Refund processed successfully";
 
-					// Update contribution status to Completed + fill in data from $response
-          $refundTrxnId = $response['PelecardTransactionId'] ?? 'refund_' . time();
+				// Update contribution status to Completed + fill in data from $response
+        $refundTrxnId = $response['PelecardTransactionId'] ?? 'refund_' . time();
 	\Civi\Api4\Contribution::update(false)
 		->addWhere('id', '=', $contributionId)
-		->addValue('contribution_status_id:name', 'Completed')
+		->addValue('contribution_status_id:name', self::PAYMENT_STATUS_COMPLETED)
 		->execute();
-        } else {
-          $refundTrxnId = 'refund_' . time();
-          $message = "Refund failed: " . $response['status_code'] . " " . $response['error_message'];
-        }
-      } catch (Exception $e) {
-        $message = "Error processing refund: " . $e->getMessage();
+      } else {
+        $refundTrxnId = 'refund_' . time();
+        $message = "Refund failed: " . $response['status_code'] . " " . $response['error_message'];
       }
-  
-      // Result
-      return [
-        'success' => $success,
-        'message' => $message,
-        'trxn_id' => $refundTrxnId,
-      ];
+    } catch (Exception $e) {
+      $message = "Error processing refund: " . $e->getMessage();
     }
+ 
+    // Result
+    return [
+      'success' => $success,
+      'message' => $message,
+      'trxn_id' => $refundTrxnId,
+    ];
+  }
 
-		/* DEBUG
+	/* DEBUG - for reference
        echo "<pre>";
        var_dump($this->_paymentProcessor);
        var_dump($params);
@@ -246,7 +204,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
        exit();
        echo static::formatBacktrace(debug_backtrace());
     */
-    function doPayment(&$params, $component = 'contribute') {
+	    function doPayment(&$params, $component = 'contribute') {
         if ($component != 'contribute' && $component != 'event') {
             Civi::log()->error('bbprioritycc_payment_exception',
                 ['context' => [
@@ -273,7 +231,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         // Conceivably a processor might override this - perhaps for setting up a token - but we don't
         // have an example of that at the moment.
         if ($params['amount'] == 0) {
-            $result = array();
+            $result = [];
             $result['payment_status_id'] = array_search('Completed', $statuses);
             $result['payment_status'] = 'Completed';
             return $result;
@@ -337,29 +295,28 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         }
 
 	$this->updateActivitiesViaContribution($contributionID, $contactID);
-	$this->updateActivitiesViaPendingActivities($contributionID, $contactID);
+	$this->updateActivitiesViaPendingActivities($contributionID);
 
-        $pelecard = new PelecardAPICC;
+        $pelecard = new PelecardCC();
         $merchantUrl = $base_url . 'civicrm/payment/ipn?processor_id=' . $this->_paymentProcessor["id"] . '&mode=' . $this->_mode
             . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
             . '&returnURL=' . $pelecard->base64_url_encode($returnURL);
 
-        $financialTypeID = self::array_column_recursive_first($params, "financialTypeID");
-        if (empty($financialTypeID)) {
-            $financialTypeID = self::array_column_recursive_first($params, "financial_type_id");
-        }
-        $financial_account_id = civicrm_api3('EntityFinancialAccount', 'getvalue', array('return' => "financial_account_id", 'entity_id' => $financialTypeID, 'account_relationship' => 1,));
-        $contact_id = civicrm_api3('FinancialAccount', 'getvalue', array('return' => "contact_id", 'id' => $financial_account_id, 'account_relationship' => 1,));
-        $nick_name = civicrm_api3('Contact', 'getvalue', array('return' => "nick_name", 'id' => $contact_id, 'account_relationship' => 1,));
+        $financialTypeID = $this->getFinancialTypeId($params);
+        $financial_account_id = $this->getFinancialAccountId($financialTypeID);
+        $contact_id = $this->getEntityFieldValue(
+            FinancialAccount::class,
+            'contact_id',
+            ['id' => $financial_account_id, 'account_relationship' => 1]
+        );
+        $nick_name = $this->getEntityFieldValue(
+            Contact::class,
+            'nick_name',
+            ['id' => $contact_id, 'account_relationship' => 1]
+        );
 
         $currencyName = $params['custom_1706'] ?? $params['currencyID'];
-        if ($currencyName == "EUR") {
-            $currency = 978;
-        } elseif ($currencyName == "USD") {
-            $currency = 2;
-        } else { // ILS -- default
-            $currency = 1;
-        }
+        $currency = $this->getCurrencyCode($params);
 	\Civi\Api4\Contribution::update(false)
 		->addWhere('id', '=', $contributionID)
 		->addValue('currency', $currencyName)
@@ -436,9 +393,17 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         $pelecard->setParameter("Currency", $currency);
         $pelecard->setParameter("MinPayments", 1);
 
-        $installments = civicrm_api3('FinancialAccount', 'getvalue', array('return' => "account_type_code", 'id' => $financial_account_id,));
+        $installments = FinancialAccount::get(false)
+            ->addSelect('account_type_code')
+            ->addWhere('id', '=', $financial_account_id)
+            ->execute()
+            ->single()['account_type_code'];
         try {
-            $min_amount = civicrm_api3('FinancialAccount', 'getvalue', array('return' => "description", 'id' => $financial_account_id,));
+            $min_amount = FinancialAccount::get(false)
+                ->addSelect('description')
+                ->addWhere('id', '=', $financial_account_id)
+                ->execute()
+                ->single()['description'];
         } catch (Exception $e) {
             $min_amount = 0;
         }
@@ -465,10 +430,82 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
     public function handlePaymentNotification() {
         $ipnClass = new CRM_Core_Payment_BBPriorityCCIPN(array_merge($_GET, $_REQUEST));
 
-        $input = $ids = array();
+        $input = $ids = [];
         $ipnClass->getInput($input, $ids);
 
         $ipnClass->main($this->_paymentProcessor, $input, $ids);
+    }
+
+    /**
+     * Helper method to get a single field value from an API4 entity
+     */
+    private function getEntityFieldValue(string $entityClass, string $field, array $conditions): string {
+        $query = $entityClass::get(false)->addSelect($field);
+        
+        foreach ($conditions as $fieldName => $value) {
+            $query->addWhere($fieldName, '=', $value);
+        }
+        
+        return $query->execute()->single()[$field];
+    }
+
+    /**
+     * Helper method to get financial account ID for a financial type
+     */
+    private function getFinancialAccountId(int $financialTypeId): int {
+        return (int) $this->getEntityFieldValue(
+            EntityFinancialAccount::class,
+            'financial_account_id',
+            ['entity_id' => $financialTypeId, 'account_relationship' => 1]
+        );
+    }
+
+    /**
+     * Helper method to get financial type ID from params
+     */
+    private function getFinancialTypeId(array $params): int {
+        return (int) ($this->array_column_recursive_first($params, "financialTypeID") 
+                     ?: $this->array_column_recursive_first($params, "financial_type_id"));
+    }
+
+    /**
+     * Currency mapping
+     */
+    private const CURRENCY_MAP = [
+        'EUR' => 978,
+        'USD' => 2,
+    ];
+
+    /**
+     * Payment constants
+     */
+    private const DEBIT_ACTION = 'J4';
+    private const SHOP_NUMBER = '100';
+    private const PAYMENT_STATUS_COMPLETED = 'Completed';
+    private const PAYMENT_STATUS_PENDING = 'Pending';
+    private const PAYMENT_INSTRUMENT_CREDIT_CARD = 'Credit Card';
+
+    /**
+     * Helper method to get currency code
+     */
+    private function getCurrencyCode(array $params): int {
+        $currencyName = $params['custom_1706'] ?? $params['currencyID'];
+        return self::CURRENCY_MAP[$currencyName] ?? 1; // ILS default
+    }
+
+    /**
+     * Validate required parameters
+     */
+    private function validateRequiredParams(array $params, array $requiredFields): ?array {
+        foreach ($requiredFields as $field) {
+            if (!isset($params[$field]) || empty($params[$field])) {
+                return [
+                    'success' => false,
+                    'message' => "Missing required parameter: $field",
+                ];
+            }
+        }
+        return null;
     }
 
     /* Find first occurrence of needle somewhere in haystack (on all levels) */
@@ -482,104 +519,63 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         return count($found) > 0 ? $found[0] : "";
     }
 
-    /**
-     * Get the value of a field if set.
-     *
-     * @param string $field
-     *   The field.
-     *
-     * @param bool $xmlSafe
-     * @return mixed
-     *   value of the field, or empty string if the field is not set
-     */
-    public function _getParam(string $field, bool $xmlSafe = FALSE): string {
-        $value = $this->_params[$field] ?? '';
-        if ($xmlSafe) {
-            $value = str_replace(['&', '"', "'", '<', '>'], '', $value);
-        }
-        return $value;
-    }
 
-    /**
-     * Set a field to the specified value.  Value must be a scalar (int,
-     * float, string, or boolean)
-     *
-     * @param string $field
-     * @param string $value
-     *
-     */
-    public function _setParam(string $field, string $value) {
-        $this->_params[$field] = $value;
-    }
-
-    function getGToken($contact_id) {
-      return $this->getToken($contact_id, 'Contact', 'general_token', 'gtoken');
-    }
-
-    function getCToken($contribution_id) {
-      return $this->getToken($contribution_id, 'Contribution', 'Payment_details', 'token');
-    }
 
     function getToken($entity_id, $entity, $group_name, $field_name) {
       $token = "";
 
       try {
         // First, we need to get the custom field ID
-        $customField = civicrm_api3('CustomField', 'get', [
-          'sequential' => 1,
-          'custom_group_id' => $group_name,
-          'name' => $field_name,
-        ]);
+        $customField = CustomField::get(false)
+          ->addWhere('custom_group_id', '=', $group_name)
+          ->addWhere('name', '=', $field_name)
+          ->execute();
     
-        if ($customField['count'] > 0) {
-          $customFieldId = $customField['values'][0]['id'];
+        if ($customField->count() > 0) {
+          $customFieldId = $customField->first()['id'];
       
           // Now get the entity with the custom field explicitly requested
-          $result = civicrm_api3($entity, 'get', [
-            'return' => ["custom_$customFieldId"],
-            'id' => $entity_id,
-          ]);
+          $entityClass = "\\Civi\\Api4\\$entity";
+          $result = $entityClass::get(false)
+            ->addSelect("custom_$customFieldId")
+            ->addWhere('id', '=', $entity_id)
+            ->execute()
+            ->first();
       
-          if (!empty($result['values'][$entity_id]["custom_$customFieldId"])) {
-            $token = $result['values'][$entity_id]["custom_$customFieldId"];
+          if (!empty($result["custom_$customFieldId"])) {
+            $token = $result["custom_$customFieldId"];
           }
         }
-      } catch (CiviCRM_API3_Exception $e) {
+      } catch (Exception $e) {
       }
       return $token;
     }
 
-		protected function payByToken($token, $amount, $currencyID, $contributionId) {
-			$pelecard = new PelecardAPICC;
-			$pelecard->setParameter("terminalNumber", $this->_paymentProcessor["signature"]);
-			$pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
-			$pelecard->setParameter("password", $this->_paymentProcessor["password"]);
+		protected function payByToken(string $token, float $amount, string $currencyID, int $contributionId): array {
+		$pelecard = new PelecardCC();
+		$pelecard->setParameter("terminalNumber", $this->_paymentProcessor["signature"]);
+		$pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
+		$pelecard->setParameter("password", $this->_paymentProcessor["password"]);
 
-			$pelecard->setParameter("ActionType", 'J4'); // Debit action
-			$pelecard->setParameter("ShopNo", "100");
-			$pelecard->setParameter("token", $token);
-			$pelecard->setParameter("ParamX", 'civicrm-' . $contributionId);
-			$pelecard->setParameter("total", $amount * 100);
+		$pelecard->setParameter("ActionType", self::DEBIT_ACTION); // Debit action
+		$pelecard->setParameter("ShopNo", self::SHOP_NUMBER);
+		$pelecard->setParameter("token", $token);
+		$pelecard->setParameter("ParamX", 'civicrm-' . $contributionId);
+		$pelecard->setParameter("total", $amount * 100);
 
-			if ($currencyID == "EUR") {
-					$currency = 978;
-			} elseif ($currencyID == "USD") {
-					$currency = 2;
-			} else { // ILS -- default
-					$currency = 1;
-			}
-			$pelecard->setParameter("Currency", $currency);
-			$result = $pelecard->singlePayment();
-			if (!$result['success']) {
-				$response['success'] = false;
-				$response['code'] = $result['code'];
-				$response['error_message'] = $result['error_message'];
-				return $response;
-			}
-			$response['success'] = true;
-      $response['PelecardTransactionId'] = $result['PelecardTransactionId'];
+		$currency = $this->getCurrencyCode(['currencyID' => $currencyID]);
+		$pelecard->setParameter("Currency", $currency);
+		$result = $pelecard->singlePayment();
+		if (!$result['success']) {
+			$response['success'] = false;
+			$response['code'] = $result['code'];
+			$response['error_message'] = $result['error_message'];
 			return $response;
 		}
+		$response['success'] = true;
+    $response['PelecardTransactionId'] = $result['PelecardTransactionId'];
+		return $response;
+	}
 
     // for meals
     private function updateActivitiesViaContribution($contributionID, $contactID) {
@@ -617,7 +613,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
     }
     
     // For events
-    private function updateActivitiesViaPendingActivities($contributionID, $contactID) {
+    private function updateActivitiesViaPendingActivities($contributionID) {
      try {
 	// get activity
 	$today = date('d-m-Y 00:00');

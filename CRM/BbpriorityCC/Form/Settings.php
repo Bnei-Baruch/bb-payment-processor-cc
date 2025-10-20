@@ -1,5 +1,8 @@
 <?php
 
+use Civi\Api4\PaymentProcessorType;
+use Civi\Api4\PaymentProcessor;
+
 require_once 'CRM/Core/Form.php';
 
 class CRM_BbpriorityCC_Form_Settings extends CRM_Core_Form {
@@ -55,15 +58,17 @@ class CRM_BbpriorityCC_Form_Settings extends CRM_Core_Form {
 
   public function getPaymentProcessors() {
     // Get the BbpriorityCC payment processor type
-    $bbpriorityCCName = array( 'name' => 'BbpriorityCC' );
-    $paymentProcessorType = civicrm_api3( 'PaymentProcessorType', 'getsingle', $bbpriorityCCName );
+    $paymentProcessorType = PaymentProcessorType::get(false)
+      ->addWhere('name', '=', 'BbpriorityCC')
+      ->execute()
+      ->single();
 
     // Get the payment processors of bbpriorityCC type
-    $bbpriorityCCType = array(
-      'payment_processor_type_id' => $paymentProcessorType[ 'id' ],
-      'is_active' => 1 );
-    $paymentProcessors = civicrm_api3( 'PaymentProcessor', 'get', $bbpriorityCCType );
+    $paymentProcessors = PaymentProcessor::get(false)
+      ->addWhere('payment_processor_type_id', '=', $paymentProcessorType['id'])
+      ->addWhere('is_active', '=', 1)
+      ->execute();
 
-    return $paymentProcessors["values"];
+    return $paymentProcessors->getArrayCopy();
   }
 }
