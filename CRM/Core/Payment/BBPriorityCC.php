@@ -98,7 +98,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
 			#);
 	  }
 
-    public function doRefund(array $params): array {
+    public function doRefund(&$params) {
     $original = CRM_Core_BAO_FinancialTrxn::getOriginalTrxnAndParams($params['contribution_id']);
     if (empty($original['trxn'])) {
       return [
@@ -307,12 +307,12 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         $contact_id = $this->getEntityFieldValue(
             FinancialAccount::class,
             'contact_id',
-            ['id' => $financial_account_id, 'account_relationship' => 1]
+            ['id' => $financial_account_id]
         );
         $nick_name = $this->getEntityFieldValue(
             Contact::class,
             'nick_name',
-            ['id' => $contact_id, 'account_relationship' => 1]
+            ['id' => $contact_id]
         );
 
         $currencyName = $params['custom_1706'] ?? $params['currencyID'];
@@ -664,5 +664,31 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
 	FinancialTrxn::create(false)
 		->setValues($ftParams)
 		->execute();
+  }
+
+  /**
+   * Get the value of a stored parameter.
+   *
+   * @param string $field
+   * @param bool $xmlSafe
+   * @return string
+   *   value of the field, or empty string if the field is not set
+   */
+  public function _getParam(string $field, bool $xmlSafe = FALSE): string {
+    $value = $this->_params[$field] ?? '';
+    if ($xmlSafe) {
+      $value = str_replace(['&', '"', "'", '<', '>'], '', $value);
+    }
+    return $value;
+  }
+
+  /**
+   * Set a field to the specified value.
+   *
+   * @param string $field
+   * @param mixed $value
+   */
+  public function _setParam(string $field, $value) {
+    $this->_params[$field] = $value;
   }
 }
