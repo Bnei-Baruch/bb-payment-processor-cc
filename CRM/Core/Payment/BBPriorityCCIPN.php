@@ -158,21 +158,55 @@ class CRM_Core_Payment_BBPriorityCCIPN {
         }
 
         $input['amount'] = $contribution['total_amount'];
-        list($valid, $data) = $this->_bbpAPI->validateResponse($paymentProcessor, $input, $contribution, ErrorCodes::ERROR_CODES);
+        list($valid, $data, $errorCode) = $this->_bbpAPI->validateResponse($paymentProcessor, $input, $contribution, ErrorCodes::ERROR_CODES);
 
         if (!$valid) {
             Civi::log('BBPCC IPN')->debug("Pelecard Response is invalid");
+
+            // Update contribution with error code
+            if ($errorCode > 0) {
+                Contribution::update(false)
+                    ->addWhere('id', '=', $contribution['id'])
+                    ->addValue('invoice_number', (string)$errorCode)
+                    ->addValue('contribution_status_id', 4) // Failed status
+                    ->execute();
+            }
             return [false, null];
         }
 
-        // Update transaction ID if needed
-        if ($valid) {
-            Contribution::update(false)
-                ->addWhere('id', '=', $contribution['id'])
-                ->addValue('trxn_id', $valid)
-                ->execute();
-        }
+        // Store transaction data in civicrm_bb_payment_responses
+        $this->storePaymentResponse($contribution['id'], $data);
+
+        // Update transaction ID
+        Contribution::update(false)
+            ->addWhere('id', '=', $contribution['id'])
+            ->addValue('trxn_id', $data['PelecardTransactionId'])
+            ->execute();
+
         return [true, $data];
+    }
+
+    /**
+     * Store payment response data in database
+     */
+    private function storePaymentResponse($contributionId, $data): void {
+        $query_params = [
+            1 => [$data['PelecardTransactionId'], 'String'],
+            2 => [$contributionId, 'String'],
+            3 => [$data['CreditCardCompanyIssuer'] ?? '', 'String'],
+            4 => [$data['CreditCardNumber'] ?? '', 'String'],
+            5 => [$data['CreditCardExpDate'] ?? '', 'String'],
+            6 => [$data['FirstPaymentTotal'] ?? 0, 'String'],
+            7 => [$data['TotalPayments'] ?? 1, 'String'],
+            8 => [is_array($data['FullResponse']) ? http_build_query($data['FullResponse']) : $data['FullResponse'], 'String'],
+            9 => [$data['DebitTotal'] ?? 0, 'String'],
+        ];
+
+        CRM_Core_DAO::executeQuery(
+            'INSERT INTO civicrm_bb_payment_responses(trxn_id, cid, cardtype, cardnum, cardexp, firstpay, installments, response, amount, is_regular, created_at)
+             VALUES (%1, %2, %3, %4, %5, %6, %7, %8, %9, 1, NOW())',
+            $query_params
+        );
     }
 
   /**
