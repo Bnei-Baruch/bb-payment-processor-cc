@@ -99,11 +99,23 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
 	  }
 
     public function doRefund(&$params) {
-    $original = CRM_Core_BAO_FinancialTrxn::getOriginalTrxnAndParams($params['contribution_id']);
-    if (empty($original['trxn'])) {
+    // Get the original contribution
+    try {
+      $original = \Civi\Api4\Contribution::get(false)
+        ->addWhere('id', '=', $params['contribution_id'])
+        ->execute()
+        ->first();
+
+      if (empty($original)) {
+        return [
+          'success' => false,
+          'message' => 'Unable to find original contribution'
+        ];
+      }
+    } catch (Exception $e) {
       return [
         'success' => false,
-        'message' => 'Unable to find original transaction'
+        'message' => 'Error fetching original contribution: ' . $e->getMessage()
       ];
     }
 
