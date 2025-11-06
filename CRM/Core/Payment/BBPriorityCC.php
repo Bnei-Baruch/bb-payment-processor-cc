@@ -119,7 +119,13 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
       ];
     }
 
-    $total_amount = $params['amount'];
+    // Try to get the amount from various possible keys
+    $total_amount = $params['amount'] ?? $params['total_amount'] ?? 0;
+
+    // If still 0, use the original contribution amount (full refund)
+    if ($total_amount == 0 && !empty($original['total_amount'])) {
+      $total_amount = abs($original['total_amount']);
+    }
 
     // Get refund reason
     $refundSource = !empty($params['source']) ? 'Refund ' . $params['source'] : 'Refund';
@@ -538,26 +544,30 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
     try {
       // First, we need to get the custom field ID
       $customField = CustomField::get(false)
-        ->addWhere('custom_group_id', '=', $group_name)
+        ->addWhere('custom_group_id:name', '=', $group_name)
         ->addWhere('name', '=', $field_name)
         ->execute();
 
       if ($customField->count() > 0) {
         $customFieldId = $customField->first()['id'];
 
-        // Now get the entity with the custom field explicitly requested
+        // Now get the entity with the custom field using group.field notation
         $entityClass = "\\Civi\\Api4\\$entity";
         $result = $entityClass::get(false)
-          ->addSelect("custom_$customFieldId")
+          ->addSelect("{$group_name}.{$field_name}")
           ->addWhere('id', '=', $entity_id)
           ->execute()
           ->first();
 
-        if (!empty($result["custom_$customFieldId"])) {
+        // Try both notations: group.field and custom_id
+        if (!empty($result["{$group_name}.{$field_name}"])) {
+          $token = $result["{$group_name}.{$field_name}"];
+        } elseif (!empty($result["custom_$customFieldId"])) {
           $token = $result["custom_$customFieldId"];
         }
       }
     } catch (Exception $e) {
+      \Civi::log('BBPriorityCC')->error("Error retrieving token for {$entity} ID {$entity_id}: " . $e->getMessage());
     }
     return $token;
   }
@@ -568,11 +578,14 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
     $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
     $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
 
-    $pelecard->setParameter("ActionType", self::DEBIT_ACTION); // Debit action
+    $pelecard->setParameter("ActionType", self::DEBIT_ACTION); // Debit action (J4 = refund)
     $pelecard->setParameter("ShopNo", self::SHOP_NUMBER);
     $pelecard->setParameter("token", $token);
     $pelecard->setParameter("ParamX", 'civicrm-' . $contributionId);
-    $pelecard->setParameter("total", $amount * 100);
+
+    // For refunds (ActionType J4), Pelecard expects negative amount
+    $total = $amount * 100;
+    $pelecard->setParameter("total", $total);
 
     $currency = $this->getCurrencyCode(['currencyID' => $currencyID]);
     $pelecard->setParameter("Currency", $currency);

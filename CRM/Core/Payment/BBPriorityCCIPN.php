@@ -158,7 +158,7 @@ class CRM_Core_Payment_BBPriorityCCIPN {
         }
 
         $input['amount'] = $contribution['total_amount'];
-        list($valid, $data, $errorCode) = $this->_bbpAPI->validateResponse($paymentProcessor, $input, $contribution, ErrorCodes::ERROR_CODES);
+        list($valid, $data, $errorCode) = $this->_bbpAPI->validateResponse($paymentProcessor, $input, $contribution);
 
         if (!$valid) {
             Civi::log('BBPCC IPN')->debug("Pelecard Response is invalid");
