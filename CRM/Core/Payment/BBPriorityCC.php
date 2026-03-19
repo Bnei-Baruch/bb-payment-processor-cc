@@ -193,10 +193,19 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
 
         // Update contribution status to Completed + fill in data from $response
         $refundTrxnId = $response['PelecardTransactionId'] ?? 'refund_' . time();
+        /* Due to CiviRRM API4 bug:
         \Civi\Api4\Contribution::update(false)
           ->addWhere('id', '=', $contributionId)
           ->addValue('contribution_status_id:name', self::PAYMENT_STATUS_COMPLETED)
           ->execute();
+        */
+          \CRM_Core_DAO::executeQuery(
+              "UPDATE civicrm_contribution SET contribution_status_id = %1 WHERE id = %2",
+              [
+                  1 => [CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'contribution_status_id', self::PAYMENT_STATUS_COMPLETED), 'Integer'],
+                  2 => [$contributionId, 'Integer'],
+              ]
+          );
       } else {
         $refundTrxnId = 'refund_' . time();
         $message = "Refund failed: " . $response['status_code'] . " " . $response['error_message'];
