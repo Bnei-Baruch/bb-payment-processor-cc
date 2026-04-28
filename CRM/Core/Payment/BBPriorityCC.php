@@ -378,7 +378,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
         $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
         $pelecard->setParameter('TextOnConfirmationBox', 'I agree with the terms of service');
       }
-      $pelecard->setParameter('ConfirmationLink', 'https://checkout.kabbalah.info/legacy-statement-crm-en.html');
+      $pelecard->setParameter('ConfirmationLink', 'https://kli.one/terms');
       $pelecard->setParameter("LogoUrl", "https://checkout.kabbalah.info/logo1.png");
     } elseif ($nick_name == 'meshp18') {
       $pelecard->setParameter("TopText", 'משפחה בחיבור');
