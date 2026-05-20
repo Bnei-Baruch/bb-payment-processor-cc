@@ -14,8 +14,9 @@ use Civi\Api4\Contact;
 use Civi\Api4\CustomField;
 use Civi\Api4\PaymentProcessorType;
 use Civi\Api4\PaymentProcessor;
-use CRM\BBPelecard\API\PelecardCC;
+use CRM\BBPelecard\API\Pelecard;
 use CRM\BBPelecard\Utils\ErrorCodes;
+use CRM\BBPelecard\Payment\BBPriorityBaseProcessor;
 
 require_once 'CRM/Core/Payment.php';
 require_once 'BBPriorityCCIPN.php';
@@ -23,11 +24,7 @@ require_once 'BBPriorityCCIPN.php';
 /**
  * BBPriorityCC payment processor
  */
-class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
-  protected $_mode = NULL;
-
-  protected $_params = [];
-
+class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
   /**
    * Constructor.
    *
@@ -43,19 +40,6 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
     $this->_paymentProcessor = $paymentProcessor;
 
     $this->_setParam('processorName', 'BB Payment CC');
-  }
-
-  public function setTrxnId(string $mode): string {
-    $query = "SELECT MAX(trxn_id) AS trxn_id FROM civicrm_contribution WHERE trxn_id LIKE '{$mode}_%' LIMIT 1";
-    $tid = CRM_Core_Dao::executeQuery($query);
-    if (!$tid->fetch()) {
-      throw new Exception('Could not find contribution max id');
-    }
-    $trxn_id = strval($tid->trxn_id);
-    $trxn_id = str_replace("{$mode}_", '', $trxn_id);
-    $trxn_id = intval($trxn_id) + 1;
-    $uniqid = uniqid();
-    return "{$mode}_{$trxn_id}_{$uniqid}";
   }
 
   /**
@@ -324,7 +308,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
     $this->updateActivitiesViaContribution($contributionID, $contactID);
     $this->updateActivitiesViaPendingActivities($contributionID);
 
-    $pelecard = new PelecardCC();
+    $pelecard = new Pelecard(Pelecard::TYPE_CC);
     $merchantUrl = $base_url . 'civicrm/payment/ipn?processor_id=' . $this->_paymentProcessor["id"] . '&mode=' . $this->_mode
       . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
       . '&returnURL=' . $pelecard->base64_url_encode($returnURL);
@@ -464,88 +448,11 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
   }
 
   /**
-   * Helper method to get a single field value from an API4 entity
-   */
-  private function getEntityFieldValue(string $entityClass, string $field, array $conditions): string {
-    $query = $entityClass::get(false)->addSelect($field);
-
-    foreach ($conditions as $fieldName => $value) {
-      $query->addWhere($fieldName, '=', $value);
-    }
-
-    return $query->execute()->single()[$field];
-  }
-
-  /**
-   * Helper method to get financial account ID for a financial type
-   */
-  private function getFinancialAccountId(int $financialTypeId): int {
-    return (int)$this->getEntityFieldValue(
-      EntityFinancialAccount::class,
-      'financial_account_id',
-      ['entity_id' => $financialTypeId, 'account_relationship' => 1]
-    );
-  }
-
-  /**
-   * Helper method to get financial type ID from params
-   */
-  private function getFinancialTypeId(array $params): int {
-    return (int)($this->array_column_recursive_first($params, "financialTypeID")
-      ?: $this->array_column_recursive_first($params, "financial_type_id"));
-  }
-
-  /**
-   * Currency mapping
-   */
-  private const CURRENCY_MAP = [
-    'EUR' => 978,
-    'USD' => 2,
-  ];
-
-  /**
    * Payment constants
    */
   private const DEBIT_ACTION = 'J4';
   private const SHOP_NUMBER = '100';
-  private const PAYMENT_STATUS_COMPLETED = 'Completed';
-  private const PAYMENT_STATUS_PENDING = 'Pending';
   private const PAYMENT_INSTRUMENT_CREDIT_CARD = 'Credit Card';
-
-  /**
-   * Helper method to get currency code
-   */
-  private function getCurrencyCode(array $params): int {
-    $currencyName = $params['custom_1706'] ?? $params['currencyID'];
-    return self::CURRENCY_MAP[$currencyName] ?? 1; // ILS default
-  }
-
-  /**
-   * Validate required parameters
-   */
-  private function validateRequiredParams(array $params, array $requiredFields): ?array {
-    foreach ($requiredFields as $field) {
-      if (!isset($params[$field]) || empty($params[$field])) {
-        return [
-          'success' => false,
-          'message' => "Missing required parameter: $field",
-        ];
-      }
-    }
-    return null;
-  }
-
-  /* Find first occurrence of needle somewhere in haystack (on all levels) */
-  static function array_column_recursive_first(array $haystack, $needle) {
-    $found = [];
-    array_walk_recursive($haystack, function ($value, $key) use (&$found, $needle) {
-      if (gettype($key) == 'string' && $key == $needle) {
-        $found[] = $value;
-      }
-    });
-    return count($found) > 0 ? $found[0] : "";
-  }
-
 
   function getToken($entity_id, $entity, $group_name, $field_name) {
     $token = "";
@@ -582,7 +489,7 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
   }
 
   protected function payByToken(string $token, float $amount, string $currencyID, int $contributionId): array {
-    $pelecard = new PelecardCC();
+    $pelecard = new Pelecard(Pelecard::TYPE_CC);
     $pelecard->setParameter("terminalNumber", $this->_paymentProcessor["signature"]);
     $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
     $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
@@ -682,46 +589,4 @@ class CRM_Core_Payment_BBPriorityCC extends CRM_Core_Payment {
     }
   }
 
-  // Record financial transaction
-  private function createFinancialTrxn($contributionID, $totalAmount, $trxn_id, $paymentProcessorID, $financialAccountID, $currency) {
-    $ftParams = [
-      'total_amount' => $totalAmount,
-      'contribution_id' => $contributionID,
-      'entity_id' => $contributionID,
-      'trxn_id' => $trxn_id ?? $contributionID,
-      'payment_processor_id' => $paymentProcessorID,
-      'currency' => $currency,
-      'status_id:name' => 'Completed',
-      'to_financial_account_id' => $financialAccountID,
-    ];
-    FinancialTrxn::create(false)
-      ->setValues($ftParams)
-      ->execute();
-  }
-
-  /**
-   * Get the value of a stored parameter.
-   *
-   * @param string $field
-   * @param bool $xmlSafe
-   * @return string
-   *   value of the field, or empty string if the field is not set
-   */
-  public function _getParam(string $field, bool $xmlSafe = FALSE): string {
-    $value = $this->_params[$field] ?? '';
-    if ($xmlSafe) {
-      $value = str_replace(['&', '"', "'", '<', '>'], '', $value);
-    }
-    return $value;
-  }
-
-  /**
-   * Set a field to the specified value.
-   *
-   * @param string $field
-   * @param mixed $value
-   */
-  public function _setParam(string $field, $value) {
-    $this->_params[$field] = $value;
-  }
 }
