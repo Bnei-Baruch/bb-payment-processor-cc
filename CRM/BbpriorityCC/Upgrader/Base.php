@@ -305,7 +305,7 @@ class CRM_BbpriorityCC_Upgrader_Base {
   /**
    *
    */
-  public function onUpgrade($op, CRM_Queue_Queue $queue = NULL) {
+  public function onUpgrade($op, ?CRM_Queue_Queue $queue = NULL) {
     switch ($op) {
       case 'check':
         return array($this->hasPendingRevisions());
