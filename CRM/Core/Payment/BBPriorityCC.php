@@ -192,7 +192,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
         );
       } else {
         $refundTrxnId = 'refund_' . time();
-        $message = "Refund failed: " . $response['status_code'] . " " . $response['error_message'];
+        $message = "Refund failed: " . ($response['code'] ?? '') . " " . ($response['error_message'] ?? '');
       }
     } catch (Exception $e) {
       $message = "Error processing refund: " . $e->getMessage();
