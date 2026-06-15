@@ -431,6 +431,9 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     if ($error > 0) {
       return false;
     }
+    if (!empty($result[2])) {
+      $pelecard->storeConfirmationKey((int)$contributionID, $result[2], (float)$amount);
+    }
     $url = $result[1];
 
     // Print the tpl to redirect to Pelecard
