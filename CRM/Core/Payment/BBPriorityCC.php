@@ -486,6 +486,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $pelecard->setParameter("terminalNumber", $this->_paymentProcessor["signature"]);
     $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
     $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
+    $pelecard->setParameter("TokenForTerminal", $this->_paymentProcessor["signature"]);
 
     $pelecard->setParameter("ActionType", self::DEBIT_ACTION); // Debit action (J4 = refund)
     $pelecard->setParameter("ShopNo", self::SHOP_NUMBER);
