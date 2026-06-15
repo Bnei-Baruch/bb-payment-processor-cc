@@ -308,7 +308,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $this->updateActivitiesViaContribution($contributionID, $contactID);
     $this->updateActivitiesViaPendingActivities($contributionID);
 
-    $pelecard = new Pelecard(Pelecard::TYPE_CC);
+    $pelecard = new Pelecard(Pelecard::TYPE_CC, (bool)($this->_paymentProcessor['is_test'] ?? false));
     $merchantUrl = $base_url . 'civicrm/payment/ipn?processor_id=' . $this->_paymentProcessor["id"] . '&mode=' . $this->_mode
       . '&md=' . $component . '&qfKey=' . $params["qfKey"] . '&' . $merchantUrlParams
       . '&returnURL=' . $pelecard->base64_url_encode($returnURL);
@@ -382,7 +382,6 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $pelecard->setParameter("UserKey", $params['qfKey']);
     $pelecard->setParameter("ParamX", 'civicrm-' . $params['contributionID']);
 
-    // $sandBoxUrl = 'https://gateway20.pelecard.biz/sandbox/landingpage?authnum=123';
     $pelecard->setParameter("GoodUrl", $merchantUrl); // ReturnUrl should be used _AFTER_ payment confirmation
     $pelecard->setParameter("ErrorUrl", $merchantUrl);
     $pelecard->setParameter("CancelUrl", $cancelURL);
@@ -489,7 +488,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
   }
 
   protected function payByToken(string $token, float $amount, string $currencyID, int $contributionId): array {
-    $pelecard = new Pelecard(Pelecard::TYPE_CC);
+    $pelecard = new Pelecard(Pelecard::TYPE_CC, (bool)($this->_paymentProcessor['is_test'] ?? false));
     $pelecard->setParameter("terminalNumber", $this->_paymentProcessor["signature"]);
     $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
     $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
