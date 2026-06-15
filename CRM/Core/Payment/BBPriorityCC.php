@@ -382,7 +382,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $pelecard->setParameter("terminal", $this->_paymentProcessor["signature"]);
 
     $pelecard->setParameter("UserKey", $params['qfKey']);
-    $pelecard->setParameter("ParamX", 'civicrm-' . $params['contributionID']);
+    $pelecard->setParameter("ParamX", 'cv-' . $params['contributionID']);
 
     $pelecard->setParameter("ServerSideGoodFeedbackURL", $merchantUrl);
     $pelecard->setParameter("GoodUrl", $goodUrl);
@@ -499,7 +499,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $pelecard->setParameter("ActionType", self::DEBIT_ACTION); // Debit action (J4 = refund)
     $pelecard->setParameter("ShopNo", self::SHOP_NUMBER);
     $pelecard->setParameter("token", $token);
-    $pelecard->setParameter("ParamX", 'civicrm-' . $contributionId);
+    $pelecard->setParameter("ParamX", 'cv-' . $contributionId);
 
     // For refunds (ActionType J4), Pelecard expects negative amount
     $total = $amount * 100;
