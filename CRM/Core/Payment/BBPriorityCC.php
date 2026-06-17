@@ -521,8 +521,10 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       $response['error_message'] = $result['error_message'];
       return $response;
     }
-    $response['success'] = true;
+    $response['success']               = true;
     $response['PelecardTransactionId'] = $result['PelecardTransactionId'];
+    $response['approval']              = $result['approval'] ?? '';
+    $response['data']                  = $result['data'] ?? '';
     return $response;
   }
 
