@@ -177,6 +177,21 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
 
         // Update contribution status to Completed + fill in data from $response
         $refundTrxnId = $response['PelecardTransactionId'] ?? 'refund_' . time();
+
+        // Store refund response so bb2prio can extract VoucherId for Priority credit note.
+        if (!empty($response['data'])) {
+          \CRM_Core_DAO::executeQuery(
+            'INSERT IGNORE INTO civicrm_bb_payment_responses
+             (trxn_id, cid, response, amount, is_regular, created_at)
+             VALUES (%1, %2, %3, %4, 0, NOW())',
+            [
+              1 => [$refundTrxnId, 'String'],
+              2 => [$contributionId, 'Integer'],
+              3 => [$response['data'], 'String'],
+              4 => [$total_amount, 'Float'],
+            ]
+          );
+        }
 	/* Due to CiviCRM API4 bug:
         \Civi\Api4\Contribution::update(false)
           ->addWhere('id', '=', $contributionId)
