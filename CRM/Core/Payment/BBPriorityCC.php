@@ -17,6 +17,7 @@ use Civi\Api4\PaymentProcessor;
 use CRM\BBPelecard\API\Pelecard;
 use CRM\BBPelecard\Utils\ErrorCodes;
 use CRM\BBPelecard\Payment\BBPriorityBaseProcessor;
+use CRM\BBPelecard\Payment\ActivityUpdater;
 
 require_once 'CRM/Core/Payment.php';
 require_once 'BBPriorityCCIPN.php';
@@ -320,8 +321,8 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       }
     }
 
-    $this->updateActivitiesViaContribution($contributionID, $contactID);
-    $this->updateActivitiesViaPendingActivities($contributionID);
+    ActivityUpdater::updateActivitiesViaContribution($contributionID, $contactID);
+    ActivityUpdater::updateActivitiesViaPendingActivities($contributionID);
 
     $pelecard = new Pelecard(Pelecard::TYPE_CC, (bool)($this->_paymentProcessor['is_test'] ?? false));
     $merchantUrl = $this->buildMerchantUrl($component, $params, $merchantUrlParams);
@@ -527,77 +528,4 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $response['data']                  = $result['data'] ?? '';
     return $response;
   }
-
-  // for meals
-  private function updateActivitiesViaContribution($contributionID, $contactID) {
-    try {
-      $contributions = \Civi\Api4\Contribution::get(false)
-        ->addSelect('maser.note') // Get all standard and custom fields
-        ->addWhere('id', '=', $contributionID)
-        ->addWhere('contact_id', '=', $contactID)
-        ->execute();
-
-      if (count($contributions) === 0) {
-        return;
-      }
-      $note = $contributions[0]['maser.note'] ?? '';
-      $ids = (strpos($note, 'Activities:') === 0)
-        ? explode(',', substr($note, 11))
-        : [];
-      if (empty($ids)) {
-        return;
-      }
-      $activityIds = array_map('intval', $ids);
-      try {
-        // Update status_id and custom field for all activities
-        $result = \Civi\Api4\Activity::update(false)
-          ->addWhere('id', 'IN', $activityIds)
-          ->addValue('status_id', 2)
-          ->addValue('Registration_for_meals.ID_for_the_payment', $contributionID)
-          ->execute();
-      } catch (Exception $e) {
-        // Ignore error
-      }
-    } catch (Exception $e) {
-      // Ignore error
-    }
-  }
-
-  // For events
-  private function updateActivitiesViaPendingActivities($contributionID) {
-    try {
-      // get activity
-      $today = date('d-m-Y 00:00');
-      $activities = \Civi\Api4\Activity::get(false)
-        ->addSelect('id')
-        ->addJoin('ActivityContact AS ac', 'INNER', ['id', '=', 'ac.activity_id'])
-        ->addWhere('status_id', '=', '17')
-        ->addWhere('activity_type_id', '=', '182')
-        ->addWhere('activity_date_time', '>=', $today)
-        ->addOrderBy('id', 'DESC')
-        ->setLimit(1)
-        ->execute();
-      if (count($activities) === 0) {
-        return;
-      }
-      $activity = $activities[0];
-
-      // Update contribution with Activities:...
-      \Civi\Api4\Contribution::update(false)
-        ->addWhere('id', '=', $contributionID)
-        ->addValue('maser.note', "Activities:" . $activity['id'])
-        ->execute();
-
-      // Update activities with contributionID
-      $result = \Civi\Api4\Activity::update(false)
-        ->addWhere('id', '=', $activity['id'])
-        ->setDebug(true)
-        ->addValue('status_id', 2)
-        ->addValue('Registration_for_event.id_for_payment', $contributionID)
-        ->execute();
-    } catch (Exception $e) {
-      // Ignore error
-    }
-  }
-
 }
