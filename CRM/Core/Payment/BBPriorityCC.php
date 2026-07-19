@@ -322,7 +322,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     }
 
     ActivityUpdater::updateActivitiesViaContribution($contributionID, $contactID);
-    ActivityUpdater::updateActivitiesViaPendingActivities($contributionID);
+    ActivityUpdater::updateActivitiesViaPendingActivities($contributionID, $contactID);
 
     $pelecard = new Pelecard(Pelecard::TYPE_CC, (bool)($this->_paymentProcessor['is_test'] ?? false));
     $merchantUrl = $this->buildMerchantUrl($component, $params, $merchantUrlParams);
