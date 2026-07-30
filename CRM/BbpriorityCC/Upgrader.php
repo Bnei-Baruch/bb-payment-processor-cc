@@ -75,6 +75,47 @@ class CRM_BbpriorityCC_Upgrader extends CRM_BbpriorityCC_Upgrader_Base {
   }
 
   /**
+   * Repurpose url_site as EMV Base URL; update existing processor instances
+   * from the old Pelecard logo URL to the checkout.kbb1.com endpoint.
+   * Also expose url_site_label in processor type UI.
+   *
+   * @return TRUE on success
+   * @throws Exception
+   */
+  public function upgrade_2(): bool {
+    $this->ctx->log->info('Setting EMV Base URL on BBPCC processor type and instances');
+
+    $type = civicrm_api3('PaymentProcessorType', 'get', [
+      'name'   => 'BBPCC',
+      'return' => ['id'],
+    ]);
+    if (!empty($type['id'])) {
+      civicrm_api3('PaymentProcessorType', 'create', [
+        'id'                  => $type['id'],
+        'url_site_label'      => 'EMV Base URL',
+        'url_site_default'    => 'https://checkout.kbb1.com',
+        'url_site_test_label'   => 'EMV Base URL (Test)',
+        'url_site_test_default' => 'https://checkout.kbb1.com',
+      ]);
+
+      $processors = civicrm_api3('PaymentProcessor', 'get', [
+        'payment_processor_type_id' => $type['id'],
+        'return'                    => ['id', 'url_site'],
+        'options'                   => ['limit' => 0],
+      ]);
+      foreach ($processors['values'] as $processor) {
+        if (empty($processor['url_site']) || strpos($processor['url_site'], 'checkout.kabbalah.info') !== FALSE) {
+          civicrm_api3('PaymentProcessor', 'create', [
+            'id'       => $processor['id'],
+            'url_site' => 'https://checkout.kbb1.com',
+          ]);
+        }
+      }
+    }
+    return TRUE;
+  }
+
+  /**
    * Example: Run an external SQL script
    *
    * @return TRUE on success

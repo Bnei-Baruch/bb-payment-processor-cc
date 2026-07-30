@@ -38,6 +38,12 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     if (empty($this->_paymentProcessor["password"])) {
       $error[] = ts("Merchant Password is not set in the BBPCC Payment Processor settings.");
     }
+    if (empty($this->_paymentProcessor["url_site"])) {
+      $error[] = ts("EMV Base URL is not set in the BBPCC Payment Processor settings.");
+    }
+    if (empty($this->_paymentProcessor["subject"])) {
+      $error[] = ts("Reference Prefix is not set in the BBPCC Payment Processor settings.");
+    }
     return !empty($error) ? implode("<p>", $error) : NULL;
   }
 
@@ -264,7 +270,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       'VAT'          => $vat,
       'Installments' => $maxInstallments,
       'Language'     => $lang,
-      'Reference'    => ($this->_paymentProcessor['subject'] ?? 'cv-') . $contributionID,
+      'Reference'    => $this->getReferencePrefix() . $contributionID,
       'Organization' => $nick_name,
       'TaxType'      => $taxType,
       'TaxId'        => $taxId,
@@ -328,7 +334,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $pelecard->setParameter("ActionType", self::DEBIT_ACTION);
     $pelecard->setParameter("ShopNo", self::SHOP_NUMBER);
     $pelecard->setParameter("token", $token);
-    $pelecard->setParameter("ParamX", ($this->_paymentProcessor['subject'] ?? 'cv-') . $contributionId);
+    $pelecard->setParameter("ParamX", $this->getReferencePrefix() . $contributionId);
     $total = $amount * 100;
     $pelecard->setParameter("total", $total);
     $currency = $this->getCurrencyCode(['currencyID' => $currencyID]);
@@ -429,9 +435,21 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     }
   }
 
+  private function getReferencePrefix(): string {
+    $prefix = $this->_paymentProcessor['subject'] ?? '';
+    if (empty($prefix)) {
+      throw new \RuntimeException('BBPriorityCC: Reference Prefix (subject) is not configured in payment processor settings.');
+    }
+    return $prefix;
+  }
+
   private function callEmvApi(string $path, array $body): ?string {
+    $baseUrl = rtrim($this->_paymentProcessor['url_site'] ?? '', '/');
+    if (empty($baseUrl)) {
+      throw new \RuntimeException('BBPriorityCC: EMV Base URL (url_site) is not configured in payment processor settings.');
+    }
     try {
-      $response = \Drupal::httpClient()->post('https://checkout.kbb1.com' . $path, [
+      $response = \Drupal::httpClient()->post($baseUrl . $path, [
         'json'    => $body,
         'timeout' => 30,
       ]);
@@ -441,6 +459,8 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       }
       \Civi::log('BBPriorityCC')->error('EMV ' . $path . ' error: ' . ($data['error'] ?? 'unknown'));
       return null;
+    } catch (\RuntimeException $e) {
+      throw $e;
     } catch (\Exception $e) {
       \Civi::log('BBPriorityCC')->error('EMV ' . $path . ' exception: ' . $e->getMessage());
       return null;
