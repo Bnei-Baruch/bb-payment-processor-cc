@@ -38,7 +38,7 @@ function bbpriorityCC_civicrm_install()
         'user_name_label' => 'User',
         'password_label' => 'Password',
         'signature_label' => 'Terminal',
-        //    'subject_label' => 'Subject',
+        'subject_label' => 'Reference Prefix',
         'url_site_default' => 'https://checkout.kabbalah.info/logo1.png',
         //    'url_api_default' => 'http://www.example.co.il/',
         //    'url_recur_default' => 'http://www.example.co.il/',
@@ -115,7 +115,25 @@ function bbpriorityCC_civicrm_disable()
  */
 function bbpriorityCC_civicrm_upgrade($op, ?CRM_Queue_Queue $queue = NULL)
 {
-    return;
+    if ($op === 'enqueue' && $queue) {
+        $queue->createItem(new CRM_Queue_Task(
+            'bbpriorityCC_upgrade_add_subject_label',
+            [],
+            'Add Reference Prefix field to BB Priority CC processor type'
+        ));
+    }
+    return TRUE;
+}
+
+function bbpriorityCC_upgrade_add_subject_label(CRM_Queue_TaskContext $ctx): bool {
+    $type = civicrm_api3('PaymentProcessorType', 'get', ['name' => 'BBPCC', 'return' => 'id']);
+    if (!empty($type['id'])) {
+        civicrm_api3('PaymentProcessorType', 'create', [
+            'id'            => $type['id'],
+            'subject_label' => 'Reference Prefix',
+        ]);
+    }
+    return TRUE;
 }
 
 /**

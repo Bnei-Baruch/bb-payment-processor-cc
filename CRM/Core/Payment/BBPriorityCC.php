@@ -264,7 +264,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       'VAT'          => $vat,
       'Installments' => $maxInstallments,
       'Language'     => $lang,
-      'Reference'    => 'cv-' . $contributionID,
+      'Reference'    => ($this->_paymentProcessor['subject'] ?? 'cv-') . $contributionID,
       'Organization' => $nick_name,
       'TaxType'      => $taxType,
       'TaxId'        => $taxId,
@@ -328,7 +328,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $pelecard->setParameter("ActionType", self::DEBIT_ACTION);
     $pelecard->setParameter("ShopNo", self::SHOP_NUMBER);
     $pelecard->setParameter("token", $token);
-    $pelecard->setParameter("ParamX", 'cv-' . $contributionId);
+    $pelecard->setParameter("ParamX", ($this->_paymentProcessor['subject'] ?? 'cv-') . $contributionId);
     $total = $amount * 100;
     $pelecard->setParameter("total", $total);
     $currency = $this->getCurrencyCode(['currencyID' => $currencyID]);
