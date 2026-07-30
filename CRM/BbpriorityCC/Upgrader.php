@@ -53,6 +53,28 @@ class CRM_BbpriorityCC_Upgrader extends CRM_BbpriorityCC_Upgrader_Base {
   */
 
   /**
+   * Add 'Reference Prefix' (subject) field to BBPCC processor type.
+   * Allows distinguishing prod vs stage payments (e.g. 'cv-' vs 'cvs-').
+   *
+   * @return TRUE on success
+   * @throws Exception
+   */
+  public function upgrade_1(): bool {
+    $this->ctx->log->info('Adding Reference Prefix field to BBPCC processor type');
+    $type = civicrm_api3('PaymentProcessorType', 'get', [
+      'name'   => 'BBPCC',
+      'return' => 'id',
+    ]);
+    if (!empty($type['id'])) {
+      civicrm_api3('PaymentProcessorType', 'create', [
+        'id'            => $type['id'],
+        'subject_label' => 'Reference Prefix',
+      ]);
+    }
+    return TRUE;
+  }
+
+  /**
    * Example: Run an external SQL script
    *
    * @return TRUE on success

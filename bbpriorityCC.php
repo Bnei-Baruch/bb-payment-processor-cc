@@ -115,25 +115,7 @@ function bbpriorityCC_civicrm_disable()
  */
 function bbpriorityCC_civicrm_upgrade($op, ?CRM_Queue_Queue $queue = NULL)
 {
-    if ($op === 'enqueue' && $queue) {
-        $queue->createItem(new CRM_Queue_Task(
-            'bbpriorityCC_upgrade_add_subject_label',
-            [],
-            'Add Reference Prefix field to BB Priority CC processor type'
-        ));
-    }
-    return TRUE;
-}
-
-function bbpriorityCC_upgrade_add_subject_label(CRM_Queue_TaskContext $ctx): bool {
-    $type = civicrm_api3('PaymentProcessorType', 'get', ['name' => 'BBPCC', 'return' => 'id']);
-    if (!empty($type['id'])) {
-        civicrm_api3('PaymentProcessorType', 'create', [
-            'id'            => $type['id'],
-            'subject_label' => 'Reference Prefix',
-        ]);
-    }
-    return TRUE;
+    return CRM_BbpriorityCC_Upgrader::instance()->onUpgrade($op, $queue);
 }
 
 /**
