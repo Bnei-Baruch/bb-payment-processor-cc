@@ -12,7 +12,10 @@ use Civi\Api4\EntityFinancialAccount;
 use Civi\Api4\FinancialAccount;
 use Civi\Api4\Contact;
 use Civi\Api4\CustomField;
+use Civi\Api4\PaymentProcessorType;
+use Civi\Api4\PaymentProcessor;
 use CRM\BBPelecard\API\Pelecard;
+use CRM\BBPelecard\Utils\ErrorCodes;
 use CRM\BBPelecard\Payment\BBPriorityBaseProcessor;
 use CRM\BBPelecard\Payment\ActivityUpdater;
 
@@ -24,12 +27,28 @@ require_once 'BBPriorityCCIPN.php';
  */
 class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
 
+  /**
+   * Constructor.
+   *
+   * @param string $mode
+   *   The mode of operation: live or test.
+   *
+   * @param $paymentProcessor
+   *
+   * @return \CRM_Core_Payment_BBPriorityCC
+   */
   public function __construct(string $mode, &$paymentProcessor) {
     $this->_mode = $mode;
     $this->_paymentProcessor = $paymentProcessor;
     $this->_setParam('processorName', 'BB Payment CC');
   }
 
+  /**
+   * This function checks to see if we have the right config values.
+   *
+   * @return string
+   *   the error message if any
+   */
   public function checkConfig(): ?string {
     $error = [];
     if (empty($this->_paymentProcessor["user_name"])) {
@@ -52,9 +71,20 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       '@timestamp' => date('Y-m-d H:i:s'),
       '@params' => print_r($params, TRUE)
     ]);
+
+    // Debug code for reference:
+    #$debugData = [
+    #'timestamp' => date('Y-m-d H:i:s'),
+    #'response' => $params,
+    #];
+    #file_put_contents('/sites/dev.org.kbb1.com/web/sites/default/files/civicrm/ConfigAndLog/refund_debug.log',
+    #json_encode($debugData, JSON_PRETTY_PRINT) . "\n",
+    #FILE_APPEND | LOCK_EX
+    #);
   }
 
   public function doRefund(&$params) {
+    // Get the original contribution
     try {
       $original = \Civi\Api4\Contribution::get(false)
         ->addWhere('id', '=', $params['contribution_id'])
@@ -67,16 +97,21 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       return ['success' => false, 'message' => 'Error fetching original contribution: ' . $e->getMessage()];
     }
 
+    // Try to get the amount from various possible keys
     $total_amount = $params['amount'] ?? $params['total_amount'] ?? 0;
+
+    // If still 0, use the original contribution amount (full refund)
     if ($total_amount == 0 && !empty($original['total_amount'])) {
       $total_amount = abs($original['total_amount']);
     }
 
+    // Get refund reason
     $refundSource = !empty($params['source']) ? 'Refund ' . $params['source'] : 'Refund';
     $contactId = $original['contact_id'];
     $originalId = $original['id'];
     $currencyId = $original['currency'];
 
+    // Get token from Contributions custom group or Customer custom group
     $ctoken = $this->getToken($originalId, 'Contribution', 'Payment_details', 'token');
     $gtoken = $this->getToken($contactId, 'Contact', 'general_token', 'gtoken');
     if ($ctoken == "" && $gtoken == "") {
@@ -85,9 +120,11 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $success = false;
     $refundTrxnId = null;
 
+    // Refund using ctoken or gtoken — creates a new negative contribution
     try {
       $total_amount = -$total_amount;
 
+      // Create Pending contribution
       $creditCard = \Civi\Api4\OptionValue::get(false)
         ->addSelect('value')
         ->addWhere('option_group_id:name', '=', 'payment_instrument')
@@ -126,8 +163,10 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       if ($response['success']) {
         $success = true;
         $message = "Refund processed successfully";
+        // Update contribution status to Completed + fill in data from $response
         $refundTrxnId = $response['PelecardTransactionId'] ?? 'refund_' . time();
 
+        // Store refund response so bb2prio can extract VoucherId for Priority credit note.
         if (!empty($response['data'])) {
           \CRM_Core_DAO::executeQuery(
             'INSERT IGNORE INTO civicrm_bb_payment_responses
@@ -141,6 +180,12 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
             ]
           );
         }
+        /* Due to CiviCRM API4 bug:
+        \Civi\Api4\Contribution::update(false)
+          ->addWhere('id', '=', $contributionId)
+          ->addValue('contribution_status_id:name', self::PAYMENT_STATUS_COMPLETED)
+          ->execute();
+        */
         \CRM_Core_DAO::executeQuery(
           "UPDATE civicrm_contribution SET contribution_status_id = %1 WHERE id = %2",
           [
@@ -156,6 +201,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       $message = "Error processing refund: " . $e->getMessage();
     }
 
+    // Result
     return [
       'success' => $success,
       'message' => $message,
@@ -163,6 +209,15 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     ];
   }
 
+  /* DEBUG - for reference
+       echo "<pre>";
+       var_dump($this->_paymentProcessor);
+       var_dump($params);
+       echo "</pre>";
+       http_build_query();
+       exit();
+       echo static::formatBacktrace(debug_backtrace());
+    */
   function doPayment(&$params, $component = 'contribute') {
     if ($component != 'contribute' && $component != 'event') {
       Civi::log()->error('bbprioritycc_payment_exception', ['context' => ['message' => "Component '{$component}' is invalid."]]);
@@ -182,6 +237,9 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       throw new PaymentProcessorException('It appears that this transaction is a duplicate.  Have you already submitted the form once?  If so there may have been a connection problem.  Check your email for a receipt.  If you do not receive a receipt within 2 hours you can try your transaction again.  If you continue to have problems please contact the site administrator.', 9004);
     }
 
+    // If we have a $0 amount, skip call to processor and set payment_status to Completed.
+    // Conceivably a processor might override this - perhaps for setting up a token - but we don't
+    // have an example of that at the moment.
     if ($params['amount'] == 0) {
       $result = [];
       $result['payment_status_id'] = array_search('Completed', $statuses);
@@ -190,6 +248,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     }
 
     $params['trxn_id'] = $this->setTrxnId($this->_mode);
+    // Total amount is from the form contribution field
     $amount = $params['total_amount'];
     if ($amount < 0) {
       throw new PaymentProcessorException(ts('Amount must be positive!!!'), 9004);
@@ -199,6 +258,7 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $params['net_amount'] = $amount;
 
     if (array_key_exists('successURL', $params)) {
+      // webform
       $returnURL = $params['successURL'];
       $cancelURL = $params['cancelURL'];
     } else {
@@ -294,6 +354,9 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $ipnClass->main($this->_paymentProcessor, $input, $ids);
   }
 
+  /**
+   * Payment constants
+   */
   private const DEBIT_ACTION = 'J4';
   private const SHOP_NUMBER = '100';
   private const PAYMENT_INSTRUMENT_CREDIT_CARD = 'Credit Card';
@@ -301,18 +364,21 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
   function getToken($entity_id, $entity, $group_name, $field_name) {
     $token = "";
     try {
+      // First, we need to get the custom field ID
       $customField = CustomField::get(false)
         ->addWhere('custom_group_id:name', '=', $group_name)
         ->addWhere('name', '=', $field_name)
         ->execute();
       if ($customField->count() > 0) {
         $customFieldId = $customField->first()['id'];
+        // Now get the entity with the custom field using group.field notation
         $entityClass = "\\Civi\\Api4\\$entity";
         $result = $entityClass::get(false)
           ->addSelect("{$group_name}.{$field_name}")
           ->addWhere('id', '=', $entity_id)
           ->execute()
           ->first();
+        // Try both notations: group.field and custom_id
         if (!empty($result["{$group_name}.{$field_name}"])) {
           $token = $result["{$group_name}.{$field_name}"];
         } elseif (!empty($result["custom_$customFieldId"])) {
@@ -331,10 +397,11 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
     $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
     $pelecard->setParameter("TokenForTerminal", $this->_paymentProcessor["signature"]);
-    $pelecard->setParameter("ActionType", self::DEBIT_ACTION);
+    $pelecard->setParameter("ActionType", self::DEBIT_ACTION); // Debit action (J4 = refund)
     $pelecard->setParameter("ShopNo", self::SHOP_NUMBER);
     $pelecard->setParameter("token", $token);
     $pelecard->setParameter("ParamX", $this->getReferencePrefix() . $contributionId);
+    // For refunds (ActionType J4), Pelecard expects negative amount
     $total = $amount * 100;
     $pelecard->setParameter("total", $total);
     $currency = $this->getCurrencyCode(['currencyID' => $currencyID]);
