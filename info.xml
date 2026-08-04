@@ -9,7 +9,7 @@
     <email>gshilin@gmail.com</email>
   </maintainer>
   <releaseDate>2024-09-02</releaseDate>
-  <version>3.0</version>
+  <version>3.2</version>
   <develStage>stable</develStage>
   <compatibility>
     <ver>5.74</ver>

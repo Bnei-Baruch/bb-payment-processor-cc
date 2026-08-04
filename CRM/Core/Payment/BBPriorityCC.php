@@ -26,6 +26,7 @@ require_once 'BBPriorityCCIPN.php';
  * BBPriorityCC payment processor
  */
 class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
+
   /**
    * Constructor.
    *
@@ -39,7 +40,6 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
   public function __construct(string $mode, &$paymentProcessor) {
     $this->_mode = $mode;
     $this->_paymentProcessor = $paymentProcessor;
-
     $this->_setParam('processorName', 'BB Payment CC');
   }
 
@@ -51,19 +51,19 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
    */
   public function checkConfig(): ?string {
     $error = [];
-
     if (empty($this->_paymentProcessor["user_name"])) {
       $error[] = ts("Merchant Name is not set in the BBPCC Payment Processor settings.");
     }
     if (empty($this->_paymentProcessor["password"])) {
       $error[] = ts("Merchant Password is not set in the BBPCC Payment Processor settings.");
     }
-
-    if (!empty($error)) {
-      return implode("<p>", $error);
-    } else {
-      return NULL;
+    if (empty($this->_paymentProcessor["url_site"])) {
+      $error[] = ts("EMV Base URL is not set in the BBPCC Payment Processor settings.");
     }
+    if (empty($this->_paymentProcessor["subject"])) {
+      $error[] = ts("Reference Prefix is not set in the BBPCC Payment Processor settings.");
+    }
+    return !empty($error) ? implode("<p>", $error) : NULL;
   }
 
   protected function debugMessage($params) {
@@ -90,18 +90,11 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
         ->addWhere('id', '=', $params['contribution_id'])
         ->execute()
         ->first();
-
       if (empty($original)) {
-        return [
-          'success' => false,
-          'message' => 'Unable to find original contribution'
-        ];
+        return ['success' => false, 'message' => 'Unable to find original contribution'];
       }
     } catch (Exception $e) {
-      return [
-        'success' => false,
-        'message' => 'Error fetching original contribution: ' . $e->getMessage()
-      ];
+      return ['success' => false, 'message' => 'Error fetching original contribution: ' . $e->getMessage()];
     }
 
     // Try to get the amount from various possible keys
@@ -114,7 +107,6 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
 
     // Get refund reason
     $refundSource = !empty($params['source']) ? 'Refund ' . $params['source'] : 'Refund';
-
     $contactId = $original['contact_id'];
     $originalId = $original['id'];
     $currencyId = $original['currency'];
@@ -123,16 +115,12 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $ctoken = $this->getToken($originalId, 'Contribution', 'Payment_details', 'token');
     $gtoken = $this->getToken($contactId, 'Contact', 'general_token', 'gtoken');
     if ($ctoken == "" && $gtoken == "") {
-      return [
-        'success' => false,
-        'message' => 'Unable to refund without any token'
-      ];
+      return ['success' => false, 'message' => 'Unable to refund without any token'];
     }
     $success = false;
     $refundTrxnId = null;
 
-    // Refund using ctoken or gtoken
-    // This should create a new contribution
+    // Refund using ctoken or gtoken — creates a new negative contribution
     try {
       $total_amount = -$total_amount;
 
@@ -175,7 +163,6 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       if ($response['success']) {
         $success = true;
         $message = "Refund processed successfully";
-
         // Update contribution status to Completed + fill in data from $response
         $refundTrxnId = $response['PelecardTransactionId'] ?? 'refund_' . time();
 
@@ -193,13 +180,13 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
             ]
           );
         }
-	/* Due to CiviCRM API4 bug:
+        /* Due to CiviCRM API4 bug:
         \Civi\Api4\Contribution::update(false)
           ->addWhere('id', '=', $contributionId)
           ->addValue('contribution_status_id:name', self::PAYMENT_STATUS_COMPLETED)
           ->execute();
-	*/
-	\CRM_Core_DAO::executeQuery(
+        */
+        \CRM_Core_DAO::executeQuery(
           "UPDATE civicrm_contribution SET contribution_status_id = %1 WHERE id = %2",
           [
             1 => [CRM_Core_PseudoConstant::getKey('CRM_Contribute_BAO_Contribution', 'contribution_status_id', self::PAYMENT_STATUS_COMPLETED), 'Integer'],
@@ -233,23 +220,19 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     */
   function doPayment(&$params, $component = 'contribute') {
     if ($component != 'contribute' && $component != 'event') {
-      Civi::log()->error('bbprioritycc_payment_exception',
-        ['context' => [
-          'message' => "Component '{$component}' is invalid."
-        ]]);
+      Civi::log()->error('bbprioritycc_payment_exception', ['context' => ['message' => "Component '{$component}' is invalid."]]);
       CRM_Utils_System::civiExit();
     }
     $this->_component = $component;
 
-    $base_url = CRM_Utils_System::baseURL();
-    $uiLanguage = \Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)->getId();
-    $lang = strtoupper($uiLanguage);
+    $lang = strtoupper(\Drupal::languageManager()->getCurrentLanguage(LanguageInterface::TYPE_INTERFACE)->getId());
+    $lang = in_array($lang, ['EN', 'HE', 'RU', 'ES']) ? $lang : 'EN';
 
     $statuses = CRM_Contribute_BAO_Contribution::buildOptions('contribution_status_id', 'validate');
-
     $invoiceID = $this->_getParam('invoiceID');
     $contributionID = $params['contributionID'] ?? NULL;
     $contactID = $params['contactID'];
+
     if ($this->checkDupe($invoiceID, $contributionID)) {
       throw new PaymentProcessorException('It appears that this transaction is a duplicate.  Have you already submitted the form once?  If so there may have been a connection problem.  Check your email for a receipt.  If you do not receive a receipt within 2 hours you can try your transaction again.  If you continue to have problems please contact the site administrator.', 9004);
     }
@@ -265,15 +248,14 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     }
 
     $params['trxn_id'] = $this->setTrxnId($this->_mode);
-    //Total amount is from the form contribution field
+    // Total amount is from the form contribution field
     $amount = $params['total_amount'];
     if ($amount < 0) {
       throw new PaymentProcessorException(ts('Amount must be positive!!!'), 9004);
     }
     $params['gross_amount'] = $amount;
-    // Add a fee_amount so we can be sure fees are handled properly in underlying classes.
-    $params['fee_amount'] = 1.50;
-    $params['net_amount'] = $params['gross_amount'] - $params['fee_amount'];
+    $params['fee_amount'] = 0;
+    $params['net_amount'] = $amount;
 
     if (array_key_exists('successURL', $params)) {
       // webform
@@ -282,177 +264,93 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     } else {
       $url = ($component == 'event') ? 'civicrm/event/register' : 'civicrm/contribute/transact';
       $cancel = ($component == 'event') ? '_qf_Register_display' : '_qf_Main_display';
-      $returnURL = CRM_Utils_System::url($url,
-        "_qf_ThankYou_display=1&qfKey={$params['qfKey']}",
-        TRUE, NULL, FALSE
-      );
-
+      $returnURL = CRM_Utils_System::url($url, "_qf_ThankYou_display=1&qfKey={$params['qfKey']}", TRUE, NULL, FALSE);
       $cancelUrlString = "$cancel=1&cancel=1&qfKey={$params['qfKey']}";
       if ($params['is_recur'] ?? false) {
         $cancelUrlString .= "&isRecur=1&recurId={$params['contributionRecurID']}&contribId={$contributionID}";
       }
-
-      $cancelURL = CRM_Utils_System::url(
-        $url,
-        $cancelUrlString,
-        TRUE, NULL, FALSE);
+      $cancelURL = CRM_Utils_System::url($url, $cancelUrlString, TRUE, NULL, FALSE);
     }
 
-    $merchantUrlParams = "contactID={$contactID}&contributionID={$contributionID}";
-    if ($component == 'event') {
-      $merchantUrlParams .= "&eventID={$params['eventID']}&participantID={$params['participantID']}";
-    } else {
-      $membershipID = $params['membershipID'];
-      if ($membershipID) {
-        $merchantUrlParams .= "&membershipID=$membershipID";
-      }
-      $contributionPageID = $params['contributionPageID'] ?? $params['contribution_page_id'];
-      if ($contributionPageID) {
-        $merchantUrlParams .= "&contributionPageID=$contributionPageID";
-      }
-      $relatedContactID = $params['related_contact'];
-      if ($relatedContactID) {
-        $merchantUrlParams .= "&relatedContactID=$relatedContactID";
-
-        $onBehalfDupeAlert = $params['onbehalf_dupe_alert'];
-        if ($onBehalfDupeAlert) {
-          $merchantUrlParams .= "&onBehalfDupeAlert=$onBehalfDupeAlert";
-        }
-      }
-    }
+    $goodUrl = CRM_Utils_System::url(
+      'civicrm/emv/complete',
+      'cid=' . $contributionID . '&rurl=' . urlencode($returnURL),
+      TRUE
+    );
 
     ActivityUpdater::updateActivitiesViaContribution($contributionID, $contactID);
     ActivityUpdater::updateActivitiesViaPendingActivities($contributionID);
 
-    $pelecard = new Pelecard(Pelecard::TYPE_CC, (bool)($this->_paymentProcessor['is_test'] ?? false));
-    $merchantUrl = $this->buildMerchantUrl($component, $params, $merchantUrlParams);
-    $goodUrl     = $this->buildGoodUrl($returnURL, (int)$contributionID);
-
     $financialTypeID = $this->getFinancialTypeId($params);
     $financial_account_id = $this->getFinancialAccountId($financialTypeID);
-    $contact_id = $this->getEntityFieldValue(
-      FinancialAccount::class,
-      'contact_id',
-      ['id' => $financial_account_id]
-    );
-    $nick_name = $this->getEntityFieldValue(
-      Contact::class,
-      'nick_name',
-      ['id' => $contact_id]
-    );
+
+    $financialAccount = FinancialAccount::get(false)
+      ->addSelect('contact_id', 'account_type_code', 'description', 'accounting_code', 'is_deductible')
+      ->addWhere('id', '=', $financial_account_id)
+      ->execute()
+      ->single();
+
+    $nick_name = $this->getEntityFieldValue(Contact::class, 'nick_name', ['id' => $financialAccount['contact_id']]);
+    $installments = (int)($financialAccount['account_type_code'] ?? 0);
+    $min_amount = (int)($financialAccount['description'] ?? 0);
+    $sku = $financialAccount['accounting_code'] ?? '';
+    $vat = ($financialAccount['is_deductible'] ?? false) ? 'y' : 'n';
 
     $currencyName = $params['custom_1706'] ?? $params['currencyID'];
-    $currency = $this->getCurrencyCode($params);
-    \Civi\Api4\Contribution::update(false)
+    Contribution::update(false)
       ->addWhere('id', '=', $contributionID)
       ->addValue('currency', $currencyName)
       ->execute();
 
-    $this->createFinancialTrxn($contributionID, $amount, $params['trxn_id'], $this->_paymentProcessor["id"], $financial_account_id, $currencyName);
+    $this->createFinancialTrxn($contributionID, $amount, $params['trxn_id'], $this->_paymentProcessor['id'], $financial_account_id, $currencyName);
 
-    if ($lang == 'HE') {
-      $pelecard->setParameter("Language", 'he');
-    } else if ($lang == 'RU') {
-      $pelecard->setParameter("Language", 'ru');
-    } else {
-      $pelecard->setParameter("Language", 'en');
-    }
-    if ($nick_name == 'ben2') {
-      if ($lang == 'HE') {
-        $pelecard->setParameter("TopText", 'בני ברוך קבלה לעם');
-        $pelecard->setParameter("BottomText", '© בני ברוך קבלה לעם');
-        $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
-        $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
-        $pelecard->setParameter('TextOnConfirmationBox', 'אני מסכים עם תנאי השימוש');
-      } elseif ($lang == 'RU') {
-        $pelecard->setParameter("TopText", 'Бней Барух Каббала лаАм');
-        $pelecard->setParameter("BottomText", '© Бней Барух Каббала лаАм');
-        $pelecard->setCS('cs_payments', 'Количество платежей (только для жителей Израиля)');
-        $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
-        $pelecard->setParameter('TextOnConfirmationBox', 'Я согласен с условиями обслуживания');
-      } else {
-        $pelecard->setParameter("TopText", 'Bnei Baruch Kabbalah laAm');
-        $pelecard->setParameter("BottomText", '© Bnei Baruch Kabbalah laAm');
-        $pelecard->setCS('cs_payments', 'Number of installments (for Israel residents only)');
-        $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
-        $pelecard->setParameter('TextOnConfirmationBox', 'I agree with the terms of service');
-      }
-      $pelecard->setParameter('ConfirmationLink', 'https://kli.one/terms');
-      $pelecard->setParameter("LogoUrl", "https://checkout.kabbalah.info/logo1.png");
-    } elseif ($nick_name == 'meshp18') {
-      $pelecard->setParameter("TopText", 'משפחה בחיבור');
-      $pelecard->setParameter("BottomText", '© משפחה בחיבור');
-      $pelecard->setCS('cs_payments', 'מספר תשלומים (לתושבי ישראל בלבד)');
-      $pelecard->setParameter('ShowConfirmationCheckbox', 'True');
-      $pelecard->setParameter('TextOnConfirmationBox', 'אני מסכים עם תנאי השימוש');
-      $pelecard->setParameter("Language", 'HE');
-      $pelecard->setParameter('ConfirmationLink', 'https://www.1family.co.il/privacy-policy/');
-      $pelecard->setParameter("LogoUrl", "https://www.1family.co.il/wp-content/uploads/2019/06/cropped-Screen-Shot-2019-06-16-at-00.12.07-140x82.png");
-    }
+    $maxInstallments = ($installments > 0 && $amount >= $min_amount) ? $installments : 1;
 
-    $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
-    $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
-    $pelecard->setParameter("terminal", $this->_paymentProcessor["signature"]);
+    $contactInfo = $this->fetchContactInfo($contactID, (int)$contributionID);
+    $details = $this->fetchParticipantDetails($params['participantID'] ?? null);
+    [$taxType, $taxId] = $this->fetchContributionTaxInfo((int)$contributionID);
 
-    $pelecard->setParameter("UserKey", $params['qfKey']);
-    $pelecard->setParameter("ParamX", 'cv-' . $params['contributionID']);
+    $body = [
+      'UserKey'      => $params['qfKey'],
+      'GoodURL'      => $goodUrl,
+      'ErrorURL'     => $cancelURL,
+      'CancelURL'    => $cancelURL,
+      'IsRecurring'  => (bool)($params['is_recur'] ?? false),
+      'Name'         => $contactInfo['name'],
+      'Price'        => $amount,
+      'Currency'     => $currencyName,
+      'Email'        => $contactInfo['email'],
+      'Phone'        => $contactInfo['phone'],
+      'Street'       => $contactInfo['street'],
+      'City'         => $contactInfo['city'],
+      'Country'      => $contactInfo['country'],
+      'Participants' => '1',
+      'Details'      => $details,
+      'SKU'          => $sku,
+      'VAT'          => $vat,
+      'Installments' => $maxInstallments,
+      'Language'     => $lang,
+      'Reference'    => $this->getReferencePrefix() . $contributionID,
+      'Organization' => $nick_name,
+      'TaxType'      => $taxType,
+      'TaxId'        => $taxId,
+    ];
 
-    // Free amount example
-    // $pelecard->setParameter("Total", 0);
-    // $pelecard->setParameter("FreeTotal", true);
-    // if ($lang == 'HE') {
-    // $text = "אנא הכנס סכום מתאים";
-    // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-he-1.css");
-    // } elseif ($lang == 'RU') {
-    // $text = "Введите правильную сумму";
-    // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
-    // } else {
-    // $text = "Please Select Proper Sum";
-    // $pelecard->setParameter("CssURL", "https://checkout.kabbalah.info/variant-en-1.css");
-    // }
-    // $pelecard->setCS("cs_free_total", $text);
-    $pelecard->setParameter("Total", $params["amount"] * 100);
-    $pelecard->setParameter("Currency", $currency);
-    $pelecard->setParameter("MinPayments", 1);
-
-    $installments = FinancialAccount::get(false)
-      ->addSelect('account_type_code')
-      ->addWhere('id', '=', $financial_account_id)
-      ->execute()
-      ->single()['account_type_code'];
-    try {
-      $min_amount = FinancialAccount::get(false)
-        ->addSelect('description')
-        ->addWhere('id', '=', $financial_account_id)
-        ->execute()
-        ->single()['description'];
-    } catch (Exception $e) {
-      $min_amount = 0;
-    }
-    if ((int)$installments == 0) {
-      $pelecard->setParameter("MaxPayments", 1);
-    } else if ((int)$installments > 0 && $params["amount"] >= (int)$min_amount) {
-      $pelecard->setParameter("MaxPayments", $installments);
-    }
-
-    $url = $this->applyUrlsAndLaunch($pelecard, $merchantUrl, $goodUrl, $cancelURL, (int)$contributionID, (float)$amount);
-    if ($url === null) {
+    $redirectUrl = $this->callEmvApi('/emv/new', $body);
+    if ($redirectUrl === null) {
       return false;
     }
 
-    // Print the tpl to redirect to Pelecard
     $template = CRM_Core_Smarty::singleton();
-    $template->assign('url', $url);
+    $template->assign('url', $redirectUrl);
     print $template->fetch('CRM/Core/Payment/BbpriorityCC.tpl');
     CRM_Utils_System::civiExit();
   }
 
   public function handlePaymentNotification() {
     $ipnClass = new CRM_Core_Payment_BBPriorityCCIPN(array_merge($_GET, $_REQUEST));
-
     $input = $ids = [];
     $ipnClass->getInput($input, $ids);
-
     $ipnClass->main($this->_paymentProcessor, $input, $ids);
   }
 
@@ -465,17 +363,14 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
 
   function getToken($entity_id, $entity, $group_name, $field_name) {
     $token = "";
-
     try {
       // First, we need to get the custom field ID
       $customField = CustomField::get(false)
         ->addWhere('custom_group_id:name', '=', $group_name)
         ->addWhere('name', '=', $field_name)
         ->execute();
-
       if ($customField->count() > 0) {
         $customFieldId = $customField->first()['id'];
-
         // Now get the entity with the custom field using group.field notation
         $entityClass = "\\Civi\\Api4\\$entity";
         $result = $entityClass::get(false)
@@ -483,7 +378,6 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
           ->addWhere('id', '=', $entity_id)
           ->execute()
           ->first();
-
         // Try both notations: group.field and custom_id
         if (!empty($result["{$group_name}.{$field_name}"])) {
           $token = $result["{$group_name}.{$field_name}"];
@@ -503,16 +397,13 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
     $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
     $pelecard->setParameter("TokenForTerminal", $this->_paymentProcessor["signature"]);
-
     $pelecard->setParameter("ActionType", self::DEBIT_ACTION); // Debit action (J4 = refund)
     $pelecard->setParameter("ShopNo", self::SHOP_NUMBER);
     $pelecard->setParameter("token", $token);
-    $pelecard->setParameter("ParamX", 'cv-' . $contributionId);
-
+    $pelecard->setParameter("ParamX", $this->getReferencePrefix() . $contributionId);
     // For refunds (ActionType J4), Pelecard expects negative amount
     $total = $amount * 100;
     $pelecard->setParameter("total", $total);
-
     $currency = $this->getCurrencyCode(['currencyID' => $currencyID]);
     $pelecard->setParameter("Currency", $currency);
     $result = $pelecard->singlePayment();
@@ -527,5 +418,119 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
     $response['approval']              = $result['approval'] ?? '';
     $response['data']                  = $result['data'] ?? '';
     return $response;
+  }
+
+  private function fetchContactInfo(int $contactID, int $contributionID): array {
+    $result = \CRM_Core_DAO::executeQuery("
+      SELECT
+        c.display_name AS name,
+        (SELECT e.email FROM civicrm_email e WHERE e.contact_id = c.id LIMIT 1) AS email,
+        (SELECT ph.phone FROM civicrm_phone ph WHERE ph.contact_id = c.id AND ph.is_primary = 1 LIMIT 1) AS phone,
+        (SELECT a.street_address FROM civicrm_address a WHERE a.contact_id = c.id AND a.is_primary = 1 LIMIT 1) AS street,
+        (SELECT a.city FROM civicrm_address a WHERE a.contact_id = c.id AND a.is_primary = 1 LIMIT 1) AS city,
+        COALESCE(
+          (SELECT cn.name FROM civicrm_country cn WHERE cn.iso_code =
+            (SELECT bc.bb_country_1629 FROM civicrm_value_bb_country_256 bc WHERE bc.entity_id = co.id LIMIT 1)
+          LIMIT 1),
+          (SELECT cn.name FROM civicrm_country cn WHERE cn.id =
+            (SELECT a.country_id FROM civicrm_address a WHERE a.contact_id = c.id AND a.is_primary = 1 LIMIT 1)
+          LIMIT 1)
+        ) AS country
+      FROM civicrm_contact c
+      JOIN civicrm_contribution co ON co.id = %1 AND co.contact_id = c.id
+      WHERE c.id = %2
+    ", [
+      1 => [$contributionID, 'Integer'],
+      2 => [$contactID, 'Integer'],
+    ]);
+    if ($result->fetch()) {
+      return [
+        'name'    => $result->name ?? '',
+        'email'   => $result->email ?? '',
+        'phone'   => $result->phone ?? '',
+        'street'  => $result->street ?? '',
+        'city'    => $result->city ?? '',
+        'country' => $result->country ?? '',
+      ];
+    }
+    return ['name' => '', 'email' => '', 'phone' => '', 'street' => '', 'city' => '', 'country' => ''];
+  }
+
+  private function fetchParticipantDetails(?int $participantID): string {
+    if (!$participantID) {
+      return '1';
+    }
+    $result = \CRM_Core_DAO::executeQuery(
+      'SELECT COUNT(1) + 1 AS cnt FROM civicrm_participant WHERE registered_by_id = %1',
+      [1 => [$participantID, 'Integer']]
+    );
+    return $result->fetch() ? (string)($result->cnt ?? 1) : '1';
+  }
+
+  private function fetchContributionTaxInfo(int $contributionID): array {
+    try {
+      $fields = \Civi\Api4\CustomField::get(false)
+        ->addSelect('name', 'custom_group_id.name')
+        ->addWhere('name', 'IN', ['QAME_WTAXNUMEXPL', 'QAMS_VATNUM'])
+        ->addWhere('custom_group_id.extends', '=', 'Contribution')
+        ->execute();
+      if ($fields->count() === 0) {
+        return ['', ''];
+      }
+      $selects = [];
+      foreach ($fields as $field) {
+        $selects[] = $field['custom_group_id.name'] . '.' . $field['name'];
+      }
+      $contribution = \Civi\Api4\Contribution::get(false)
+        ->addSelect(...$selects)
+        ->addWhere('id', '=', $contributionID)
+        ->execute()
+        ->first();
+      $taxType = '';
+      $taxId = '';
+      foreach ($fields as $field) {
+        $key = $field['custom_group_id.name'] . '.' . $field['name'];
+        if ($field['name'] === 'QAME_WTAXNUMEXPL') {
+          $taxType = (string)($contribution[$key] ?? '');
+        } elseif ($field['name'] === 'QAMS_VATNUM') {
+          $taxId = (string)($contribution[$key] ?? '');
+        }
+      }
+      return [$taxType, $taxId];
+    } catch (\Exception $e) {
+      return ['', ''];
+    }
+  }
+
+  private function getReferencePrefix(): string {
+    $prefix = $this->_paymentProcessor['subject'] ?? '';
+    if (empty($prefix)) {
+      throw new \RuntimeException('BBPriorityCC: Reference Prefix (subject) is not configured in payment processor settings.');
+    }
+    return $prefix;
+  }
+
+  private function callEmvApi(string $path, array $body): ?string {
+    $baseUrl = rtrim($this->_paymentProcessor['url_site'] ?? '', '/');
+    if (empty($baseUrl)) {
+      throw new \RuntimeException('BBPriorityCC: EMV Base URL (url_site) is not configured in payment processor settings.');
+    }
+    try {
+      $response = \Drupal::httpClient()->post($baseUrl . $path, [
+        'json'    => $body,
+        'timeout' => 30,
+      ]);
+      $data = json_decode($response->getBody()->getContents(), true);
+      if (($data['status'] ?? '') === 'success' && !empty($data['url'])) {
+        return $data['url'];
+      }
+      \Civi::log('BBPriorityCC')->error('EMV ' . $path . ' error: ' . ($data['error'] ?? 'unknown'));
+      return null;
+    } catch (\RuntimeException $e) {
+      throw $e;
+    } catch (\Exception $e) {
+      \Civi::log('BBPriorityCC')->error('EMV ' . $path . ' exception: ' . $e->getMessage());
+      return null;
+    }
   }
 }
