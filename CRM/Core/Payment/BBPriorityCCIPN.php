@@ -2,6 +2,7 @@
 
 use Civi\Api4\Contribution;
 use CRM\BBPelecard\API\Pelecard;
+use CRM\BBPelecard\Payment\ActivityUpdater;
 use CRM\BBPelecard\Payment\BBPriorityBaseIPN;
 
 class CRM_Core_Payment_BBPriorityCCIPN extends BBPriorityBaseIPN {
@@ -16,6 +17,10 @@ class CRM_Core_Payment_BBPriorityCCIPN extends BBPriorityBaseIPN {
 
     protected function getLogChannel(): string {
         return 'BBPCC IPN';
+    }
+
+    protected function linkPendingRegistrationActivities(array $contribution, int $contactID): void {
+        ActivityUpdater::updateActivitiesViaPendingActivities((int)$contribution['id'], 'ipn');
     }
 
     function validateResult(&$paymentProcessor, &$input, &$contribution): array {
