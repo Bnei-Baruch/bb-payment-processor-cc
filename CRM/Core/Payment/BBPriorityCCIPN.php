@@ -33,12 +33,29 @@ class CRM_Core_Payment_BBPriorityCCIPN extends BBPriorityBaseIPN {
         list($valid, $data, $errorCode) = $this->_bbpAPI->validateResponse($paymentProcessor, $input, $contribution);
 
         if (!$valid) {
-            Civi::log('BBPCC IPN')->debug("Pelecard Response is invalid");
+            // The code goes in the log, not in invoice_number.
+            //
+            // This used to write invoice_number = (string)$errorCode, and it was
+            // the last writer of that column once bb2prio and bb2fix stopped on
+            // 2026-08-25. That column was never an invoice number: the Civi ->
+            // Priority reporting pipeline used it as a three-state flag (NULL
+            // unsent, '1' sent, '-NNN' error) and now keeps that state in
+            // civicrm_bb_report_state instead. The bare codes written here — no
+            // '-' prefix — are where the ~12,600 old rows holding '004', '301'
+            // and friends come from.
+            //
+            // Dropping the write loses nothing: contribution_status_id = 4 is
+            // what actually keeps these out of every reporting queue, and it is
+            // still set below. bb2fix's checkInvoiceNumberStates warns if any
+            // writer starts putting unrecognised values in that column again,
+            // which is the point of not having one.
+            Civi::log('BBPCC IPN')->debug(
+                "Pelecard Response is invalid" . ($errorCode > 0 ? " (code {$errorCode})" : "")
+            );
 
             if ($errorCode > 0) {
                 Contribution::update(false)
                     ->addWhere('id', '=', $contribution['id'])
-                    ->addValue('invoice_number', (string)$errorCode)
                     ->addValue('contribution_status_id', 4)
                     ->execute();
             }
