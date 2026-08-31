@@ -36,8 +36,10 @@ class CRM_Core_Payment_BBPriorityCCIPN extends BBPriorityBaseIPN {
             // The code goes in the log, not in invoice_number.
             //
             // This used to write invoice_number = (string)$errorCode, and it was
-            // the last writer of that column once bb2prio and bb2fix stopped on
-            // 2026-08-25. That column was never an invoice number: the Civi ->
+            // the last writer of that column once bb2prio and bb2fix stopped
+            // writing it on 2026-08-25. Both of those still run on their usual
+            // cron schedule — it is the column they stopped using, not the
+            // binaries. That column was never an invoice number: the Civi ->
             // Priority reporting pipeline used it as a three-state flag (NULL
             // unsent, '1' sent, '-NNN' error) and now keeps that state in
             // civicrm_bb_report_state instead. The bare codes written here — no
