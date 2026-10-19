@@ -6,4 +6,11 @@
     <title>Payments Administration</title>
     <access_arguments>access CiviContribute</access_arguments>
   </item>
+  <item>
+    <path>civicrm/emv/complete</path>
+    <page_callback>CRM_BbpriorityCC_Page_EmvComplete</page_callback>
+    <title>Payment Complete</title>
+    <access_arguments>access CiviCRM</access_arguments>
+    <is_public>1</is_public>
+  </item>
 </menu>

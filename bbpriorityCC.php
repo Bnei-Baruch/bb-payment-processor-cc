@@ -38,13 +38,14 @@ function bbpriorityCC_civicrm_install()
         'user_name_label' => 'User',
         'password_label' => 'Password',
         'signature_label' => 'Terminal',
-        //    'subject_label' => 'Subject',
-        'url_site_default' => 'https://checkout.kabbalah.info/logo1.png',
+        'subject_label' => 'Reference Prefix',
+        'url_site_label' => 'EMV Base URL',
+        'url_site_default' => 'https://checkout.kbb1.com',
         //    'url_api_default' => 'http://www.example.co.il/',
         //    'url_recur_default' => 'http://www.example.co.il/',
         //    'url_button_default' => 'http://www.example.co.il/',
-        //    'url_site_test_default' => 'http://www.example.co.il/',
-        'url_site_test_default' => 'https://checkout.kabbalah.info/logo1.png',
+        'url_site_test_label' => 'EMV Base URL (Test)',
+        'url_site_test_default' => 'https://checkout.kbb1.com',
         //    'url_api_test_default' => 'http://www.example.co.il/',
         //    'url_recur_test_default' => 'http://www.example.co.il/',
         //    'url_button_test_default' => 'http://www.example.co.il/',
@@ -115,7 +116,7 @@ function bbpriorityCC_civicrm_disable()
  */
 function bbpriorityCC_civicrm_upgrade($op, ?CRM_Queue_Queue $queue = NULL)
 {
-    return;
+    return CRM_BbpriorityCC_Upgrader::instance()->onUpgrade($op, $queue);
 }
 
 /**
