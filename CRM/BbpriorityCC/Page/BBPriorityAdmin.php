@@ -77,7 +77,7 @@ SELECT
   co.id CID,
   cc.display_name QAMO_CUSTDES,
   '' QAMO_DETAILS, 
-  SUBSTRING(co.source, 1, 48) QAMO_PARTDES, 
+  SUBSTRING(co.source, 1, 120) QAMO_PARTDES, -- as sent: 4priority cuts to 120 chars
   CASE bb.cardtype
     WHEN 1 THEN 'ISR'
     WHEN 2 THEN 'CAL'
