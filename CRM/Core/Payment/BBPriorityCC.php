@@ -381,30 +381,11 @@ class CRM_Core_Payment_BBPriorityCC extends BBPriorityBaseProcessor {
       $pelecard->setParameter("LogoUrl", "https://checkout.kabbalah.info/logo1.png");
     }
 
-    // Google Pay and Apple Pay buttons on Pelecard's hosted page. The live
-    // terminal has both off unless these are sent. Note the spelling:
-    // GooglePay.Enable vs ApplePay.Enabled. Pelecard parses "True"/"False"
-    // as booleans (verified against the rendered page).
-    // Apple Pay works with our full-page redirect: Pelecard's page runs
-    // ApplePaySession itself when it is not inside an iframe, so no
-    // ClientSecure.js on our side. ApplePay.Label must be non-empty or the
-    // button is not shown; it only appears in Safari with a Wallet card.
-    // Each wallet tab has its own field settings; the top-level Cvv2Field does
-    // not reach them. Cvv2Field is left unset, so Pelecard shows its default
-    // optional CVV box on both wallet tabs. It only matters for Google Pay with
-    // a card saved in the Google account (PAN_ONLY, e.g. Chrome on a Mac): that
-    // payment is recorded as RecordSource 101 "Regular", not 105 "Google Pay".
-    // ('Cvv2Field' => 'hide' removes the box.)
-    if ($nick_name == 'ben2') {
-      $pelecard->setParameter('GooglePay', [
-        'Enable'       => 'True',
-        'MerchantName' => 'Bnei Baruch Kabbalah laAm',
-      ]);
-      $pelecard->setParameter('ApplePay', [
-        'Enabled'   => 'True',
-        'Label'     => 'Bnei Baruch Kabbalah laAm',
-      ]);
-    }
+    // Google Pay / Apple Pay are not sent: on 2026-11-15 Pelecard turned them
+    // off on the terminal, and /init then refuses the whole request (ErrCode
+    // 999 "GooglePay / ApplePay not enable call support"), which put payers on
+    // the thank-you page without a payment. Revert this commit to bring them
+    // back once Pelecard re-enables them.
 
     $pelecard->setParameter("user", $this->_paymentProcessor["user_name"]);
     $pelecard->setParameter("password", $this->_paymentProcessor["password"]);
